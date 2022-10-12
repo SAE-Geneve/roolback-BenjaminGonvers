@@ -23,6 +23,8 @@ enum class ComponentType : Component
     OTHER_TYPE = 1u << 7u
 };
 
+
+
 /**
  * \brief ComponentManager is a class that owns Component in a contiguous array. Component indexing is done with an Entity.
  * \tparam T type of the component

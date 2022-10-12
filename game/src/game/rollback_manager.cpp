@@ -162,6 +162,7 @@ void RollbackManager::ValidateFrame(Frame newValidateFrame)
             entityManager_.DestroyEntity(createdEntity.entity);
         }
     }
+
     createdEntities_.clear();
     //Remove DESTROYED flag
     for (core::Entity entity = 0; entity < entityManager_.GetEntitiesSize(); entity++)

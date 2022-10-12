@@ -16,14 +16,22 @@ PhysicsManager::PhysicsManager(core::EntityManager& entityManager) :
 
 }
 
-constexpr bool Box2Box(float r1x, float r1y, float r1w, float r1h, float r2x, float r2y, float r2w, float r2h)
+/**
+ * \brief detect if a collision occurs between two box
+ * \param pos1 position of the body of the first object
+ * \param extend1 extend of the box of the first object
+ * \param pos2 position of the body of the second object
+ * \param extend2 extend of the body of the second object 
+ * \return true if collision occurs, if not return false
+ */
+constexpr bool Box2Box(const core::Vec2f pos1,const core::Vec2f extend1,
+						const core::Vec2f pos2, const core::Vec2f extend2)
 {
-    return r1x + r1w >= r2x &&    // r1 right edge past r2 left
-        r1x <= r2x + r2w &&    // r1 left edge past r2 right
-        r1y + r1h >= r2y &&    // r1 top edge past r2 bottom
-        r1y <= r2y + r2h;
+    return pos1.x - extend1.x <= pos2.x + extend2.x &&
+        pos1.y - extend1.y <= pos2.y + extend2.y &&
+        pos1.x + extend1.x >= pos2.x - extend2.x &&
+        pos1.y + extend1.y >= pos2.y - extend2.y;
 }
-
 void PhysicsManager::FixedUpdate(sf::Time dt)
 {
 #ifdef TRACY_ENABLE
@@ -57,15 +65,8 @@ void PhysicsManager::FixedUpdate(sf::Time dt)
             const Body& body2 = bodyManager_.GetComponent(otherEntity);
             const Box& box2 = boxManager_.GetComponent(otherEntity);
 
-            if (Box2Box(
-                body1.position.x - box1.extends.x,
-                body1.position.y - box1.extends.y,
-                box1.extends.x * 2.0f,
-                box1.extends.y * 2.0f,
-                body2.position.x - box2.extends.x,
-                body2.position.y - box2.extends.y,
-                box2.extends.x * 2.0f,
-                box2.extends.y * 2.0f))
+            if (Box2Box(body1.position,box1.extends,
+                body2.position,box2.extends))
             {
                 onTriggerAction_.Execute(entity, otherEntity);
             }

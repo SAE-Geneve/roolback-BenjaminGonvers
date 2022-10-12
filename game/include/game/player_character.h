@@ -5,8 +5,17 @@
 
 namespace game
 {
-class PhysicsManager;
 
+	enum class PlayerState
+    {
+        INVALID_STATE,
+        IDLE,
+        MOVE,
+        JUMP,
+        ATTACK,
+        DASH
+    };
+class PhysicsManager;
 /**
  * \brief PlayerCharacter is a struct that holds information about the player character (when they can shoot again, their current input, and their current health).
  */
@@ -17,6 +26,7 @@ struct PlayerCharacter
     PlayerNumber playerNumber = INVALID_PLAYER;
     short health = playerHealth;
     float invincibilityTime = 0.0f;
+    PlayerState playerState = PlayerState::INVALID_STATE;
 };
 class GameManager;
 
