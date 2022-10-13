@@ -5,7 +5,10 @@
 
 namespace game
 {
-
+	/**
+	 * \brief it's give the actual state behavior of the player object,
+	 * if INVALID the player doesn't exist physically
+	 */
 	enum class PlayerState
     {
         INVALID_STATE,
