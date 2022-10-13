@@ -108,4 +108,29 @@ private:
     sf::Vector2f windowSize_{};
 };
 
+class GravityManager
+{
+private:
+	/**
+	 * \brief base gravity is g = 9,81 m/s2 for same that earth.
+	 */
+	core::Vec2f gravity_{0.0f,-9.81f};
+
+public:
+    /**
+     * \brief change de gravity to the given value (erase old value)
+     */
+    void SetGravity(const core::Vec2f newGravity);
+    /**
+     * \brief get the gravity from the manager
+     */
+    core::Vec2f GetGravity();
+    /**
+     * \brief add to the actual gravity the given value
+     * \return the new gravity value
+     */
+    core::Vec2f AddGravity(const core::Vec2f addedGravity);
+
+
+};
 }

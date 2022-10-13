@@ -141,4 +141,19 @@ void PhysicsManager::Draw(sf::RenderTarget& renderTarget)
         renderTarget.draw(rectShape);
     }
 }
+
+void GravityManager::SetGravity(const core::Vec2f newGravity)
+{
+    gravity_ = newGravity;
+}
+
+core::Vec2f GravityManager::GetGravity()
+{
+    return gravity_;
+}
+
+core::Vec2f GravityManager::AddGravity(const core::Vec2f addedGravity)
+{
+    return gravity_ += addedGravity;
+}
 }
