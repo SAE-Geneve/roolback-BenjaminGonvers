@@ -334,6 +334,7 @@ void RollbackManager::OnTrigger(core::Entity entity1, core::Entity entity2)
             currentPlayerManager_.SetComponent(playerEntity, playerCharacter);
         }
     };
+
     if (entityManager_.HasComponent(entity1, static_cast<core::EntityMask>(ComponentType::PLAYER_CHARACTER)) &&
         entityManager_.HasComponent(entity2, static_cast<core::EntityMask>(ComponentType::BULLET)))
     {

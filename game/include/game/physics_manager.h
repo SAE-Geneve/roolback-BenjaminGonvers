@@ -20,7 +20,9 @@ namespace game
 enum class BodyType
 {
     DYNAMIC,
+    KINEMATIC,
     STATIC
+    
 };
 
 /**
@@ -33,6 +35,7 @@ struct Body
     core::Degree angularVelocity = core::Degree(0.0f);
     core::Degree rotation = core::Degree(0.0f);
     BodyType bodyType = BodyType::DYNAMIC;
+    bool affectedByGravity_ = true;
 };
 
 /**
@@ -99,38 +102,30 @@ public:
     void SetCenter(sf::Vector2f center) { center_ = center; }
     void SetWindowSize(sf::Vector2f newWindowSize) { windowSize_ = newWindowSize; }
 private:
-    core::EntityManager& entityManager_;
+    /**
+     * \brief update position and rotation from the velocity of each entity of the PhysicsManager,
+     * and reset velocity to 0 for static object.
+     * \param dt is the delta time used for update correctly the translation
+     */
+    void UpdatePositionFromVelocity(sf::Time dt);
+    /**
+     * \brief Check if any collision occur, and resolve it
+     */
+    void ResolveCollision();
+    /**
+     * \brief check if all entity if they are affected by gravity, and adding the gravity to the entity affected
+     * \param dt is the delta time used for adding correctly the gravity
+     */
+    void ResolveGravity(sf::Time dt);
+
+    core::Vec2f gravity_{ 0.0f,-9.81f };
+
+	core::EntityManager& entityManager_;
     BodyManager bodyManager_;
     BoxManager boxManager_;
     core::Action<core::Entity, core::Entity> onTriggerAction_;
     //Used for debug
     sf::Vector2f center_{};
     sf::Vector2f windowSize_{};
-};
-
-class GravityManager
-{
-private:
-	/**
-	 * \brief base gravity is g = 9,81 m/s2 for same that earth.
-	 */
-	core::Vec2f gravity_{0.0f,-9.81f};
-
-public:
-    /**
-     * \brief change de gravity to the given value (erase old value)
-     */
-    void SetGravity(const core::Vec2f newGravity);
-    /**
-     * \brief get the gravity from the manager
-     */
-    core::Vec2f GetGravity();
-    /**
-     * \brief add to the actual gravity the given value
-     * \return the new gravity value
-     */
-    core::Vec2f AddGravity(const core::Vec2f addedGravity);
-
-
 };
 }

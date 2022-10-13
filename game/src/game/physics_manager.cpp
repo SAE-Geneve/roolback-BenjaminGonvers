@@ -37,42 +37,11 @@ void PhysicsManager::FixedUpdate(sf::Time dt)
 #ifdef TRACY_ENABLE
     ZoneScoped;
 #endif
-    for (core::Entity entity = 0; entity < entityManager_.GetEntitiesSize(); entity++)
-    {
-        if (!entityManager_.HasComponent(entity, static_cast<core::EntityMask>(core::ComponentType::BODY2D)))
-            continue;
-        auto body = bodyManager_.GetComponent(entity);
-        body.position += body.velocity * dt.asSeconds();
-        body.rotation += body.angularVelocity * dt.asSeconds();
-        bodyManager_.SetComponent(entity, body);
-    }
-    for (core::Entity entity = 0; entity < entityManager_.GetEntitiesSize(); entity++)
-    {
-        if (!entityManager_.HasComponent(entity,
-            static_cast<core::EntityMask>(core::ComponentType::BODY2D) |
-            static_cast<core::EntityMask>(core::ComponentType::BOX_COLLIDER2D)) ||
-            entityManager_.HasComponent(entity, static_cast<core::EntityMask>(ComponentType::DESTROYED)))
-            continue;
-        for (core::Entity otherEntity = entity + 1; otherEntity < entityManager_.GetEntitiesSize(); otherEntity++)
-        {
-            if (!entityManager_.HasComponent(otherEntity,
-                static_cast<core::EntityMask>(core::ComponentType::BODY2D) | static_cast<core::EntityMask>(core::ComponentType::BOX_COLLIDER2D)) ||
-                entityManager_.HasComponent(otherEntity, static_cast<core::EntityMask>(ComponentType::DESTROYED)))
-                continue;
-            const Body& body1 = bodyManager_.GetComponent(entity);
-            const Box& box1 = boxManager_.GetComponent(entity);
 
-            const Body& body2 = bodyManager_.GetComponent(otherEntity);
-            const Box& box2 = boxManager_.GetComponent(otherEntity);
+    UpdatePositionFromVelocity(dt);
+	ResolveCollision();
+	ResolveGravity(dt);
 
-            if (Box2Box(body1.position,box1.extends,
-                body2.position,box2.extends))
-            {
-                onTriggerAction_.Execute(entity, otherEntity);
-            }
-
-        }
-    }
 }
 
 void PhysicsManager::SetBody(core::Entity entity, const Body& body)
@@ -142,18 +111,74 @@ void PhysicsManager::Draw(sf::RenderTarget& renderTarget)
     }
 }
 
-void GravityManager::SetGravity(const core::Vec2f newGravity)
-{
-    gravity_ = newGravity;
-}
+	void PhysicsManager::UpdatePositionFromVelocity(sf::Time dt)
+    {
 
-core::Vec2f GravityManager::GetGravity()
-{
-    return gravity_;
-}
+        for (core::Entity entity = 0; entity < entityManager_.GetEntitiesSize(); entity++)
+        {
+            if (!entityManager_.HasComponent(entity, static_cast<core::EntityMask>(core::ComponentType::BODY2D)))
+                continue;
+            auto body = bodyManager_.GetComponent(entity);
 
-core::Vec2f GravityManager::AddGravity(const core::Vec2f addedGravity)
-{
-    return gravity_ += addedGravity;
-}
+            if (body.bodyType == BodyType::DYNAMIC || body.bodyType == BodyType::KINEMATIC) {
+                body.position += body.velocity * dt.asSeconds();
+                body.rotation += body.angularVelocity * dt.asSeconds();
+            }
+            if (body.bodyType == BodyType::STATIC)
+            {
+                body.velocity = core::Vec2f::zero();
+                body.angularVelocity = core::Degree(0.0f);
+            }
+
+            bodyManager_.SetComponent(entity, body);
+        }
+    }
+
+
+	void PhysicsManager::ResolveCollision()
+	{
+        for (core::Entity entity = 0; entity < entityManager_.GetEntitiesSize(); entity++)
+        {
+            if (!entityManager_.HasComponent(entity,
+                static_cast<core::EntityMask>(core::ComponentType::BODY2D) |
+                static_cast<core::EntityMask>(core::ComponentType::BOX_COLLIDER2D)) ||
+                entityManager_.HasComponent(entity, static_cast<core::EntityMask>(ComponentType::DESTROYED)))
+                continue;
+            for (core::Entity otherEntity = entity + 1; otherEntity < entityManager_.GetEntitiesSize(); otherEntity++)
+            {
+                if (!entityManager_.HasComponent(otherEntity,
+                    static_cast<core::EntityMask>(core::ComponentType::BODY2D) | static_cast<core::EntityMask>(core::ComponentType::BOX_COLLIDER2D)) ||
+                    entityManager_.HasComponent(otherEntity, static_cast<core::EntityMask>(ComponentType::DESTROYED)))
+                    continue;
+                const Body& body1 = bodyManager_.GetComponent(entity);
+                const Box& box1 = boxManager_.GetComponent(entity);
+
+                const Body& body2 = bodyManager_.GetComponent(otherEntity);
+                const Box& box2 = boxManager_.GetComponent(otherEntity);
+
+                if (Box2Box(body1.position, box1.extends,
+                    body2.position, box2.extends))
+                {
+                    onTriggerAction_.Execute(entity, otherEntity);
+                }
+
+            }
+        }
+	}
+
+	void PhysicsManager::ResolveGravity(sf::Time dt)
+	{
+        for (core::Entity entity = 0; entity < entityManager_.GetEntitiesSize(); entity++)
+        {
+            if (!entityManager_.HasComponent(entity, static_cast<core::EntityMask>(core::ComponentType::BODY2D)))
+                continue;
+
+            auto body = bodyManager_.GetComponent(entity);
+            if(body.affectedByGravity_)
+            {
+                body.velocity += gravity_ * dt.asSeconds();
+                bodyManager_.SetComponent(entity, body);
+            }
+        }
+	}
 }
