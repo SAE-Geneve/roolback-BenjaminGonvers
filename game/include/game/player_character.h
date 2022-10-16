@@ -29,7 +29,9 @@ struct PlayerCharacter
     PlayerNumber playerNumber = INVALID_PLAYER;
     short health = playerHealth;
     float invincibilityTime = 0.0f;
-    PlayerState playerState = PlayerState::INVALID_STATE;
+    float actualJumpTime = 0.0f;
+    float doubleClickTime = timeToDoubleClick + 1.0f;
+    PlayerState playerState = PlayerState::IDLE;
 };
 class GameManager;
 

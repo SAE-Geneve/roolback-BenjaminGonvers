@@ -32,11 +32,13 @@ enum class ClientId : std::uint16_t {};
 constexpr auto INVALID_CLIENT_ID = ClientId{ 0 };
 using Frame = std::uint32_t;
 /**
- * \brief mmaxPlayerNmb is a integer constant that defines the maximum number of player per game
+ * \brief maxPlayerNmb is a integer constant that defines the maximum number of player per game
  */
 constexpr std::uint32_t maxPlayerNmb = 2;
 constexpr short playerHealth = 5;
 constexpr float playerSpeed = 1.0f;
+constexpr float playerJumpSpeed = 1.0f;
+constexpr float playerJumpFlyTime = 1.0f;
 constexpr core::Degree playerAngularSpeed = core::Degree(90.0f);
 constexpr float playerShootingPeriod = 0.3f;
 constexpr float bulletSpeed = 2.0f;
@@ -44,6 +46,8 @@ constexpr float bulletScale = 0.1f;
 constexpr float bulletPeriod = 3.0f;
 constexpr float playerInvincibilityPeriod = 1.5f;
 constexpr float invincibilityFlashPeriod = 0.5f;
+constexpr float groundLevel = -2.0f;
+constexpr float timeToDoubleClick = 0.5f;
 
 /**
  * \brief windowBufferSize is the size of input stored by a client. 5 seconds of frame at 50 fps
@@ -91,8 +95,8 @@ constexpr std::array<core::Degree, std::max(4u, maxPlayerNmb)> spawnRotations
 enum class ComponentType : core::EntityMask
 {
     PLAYER_CHARACTER = static_cast<core::EntityMask>(core::ComponentType::OTHER_TYPE),
-    BULLET = static_cast<core::EntityMask>(core::ComponentType::OTHER_TYPE) << 1u,
-    ASTEROID = static_cast<core::EntityMask>(core::ComponentType::OTHER_TYPE) << 2u,
+    PLAYER_ATTACK = static_cast<core::EntityMask>(core::ComponentType::OTHER_TYPE) << 1u,
+    PLATFORM = static_cast<core::EntityMask>(core::ComponentType::OTHER_TYPE) << 2u,
     PLAYER_INPUT = static_cast<core::EntityMask>(core::ComponentType::OTHER_TYPE) << 3u,
     DESTROYED = static_cast<core::EntityMask>(core::ComponentType::OTHER_TYPE) << 4u,
 };

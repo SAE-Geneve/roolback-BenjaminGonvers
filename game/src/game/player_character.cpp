@@ -36,19 +36,80 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
         const bool up = input & PlayerInputEnum::PlayerInput::UP;
         const bool down = input & PlayerInputEnum::PlayerInput::DOWN;
 
+        const bool isDoubleClick = (right || left) && playerCharacter.doubleClickTime <= timeToDoubleClick;
+
+        if(playerCharacter.doubleClickTime <= timeToDoubleClick)
+        {
+            playerCharacter.doubleClickTime += dt.asSeconds();
+        }else if(right || left)
+        {
+            playerCharacter.doubleClickTime = 0.0f;
+        }
+
+        //todo delete comment lower comment (angular velocity[origin])
+		/*
         const auto angularVelocity = ((left ? -1.0f : 0.0f) + (right ? 1.0f : 0.0f)) * playerAngularSpeed;
 
         playerBody.angularVelocity = angularVelocity;
+        */
 
-        auto dir = core::Vec2f::up();
+        //todo delete comment lower comment (acelleration[origin])
+        /*
+    	auto dir = core::Vec2f::up();
         dir = dir.Rotate(-(playerBody.rotation + playerBody.angularVelocity * dt.asSeconds()));
 
         const auto acceleration = ((down ? -1.0f : 0.0f) + (up ? 1.0f : 0.0f)) * dir;
 
 
         playerBody.velocity += acceleration * dt.asSeconds();
+        */
+        if (playerCharacter.playerState == PlayerState::JUMP)
+        {
+            playerCharacter.actualJumpTime += dt.asSeconds();
+
+            if (playerCharacter.actualJumpTime >= playerJumpFlyTime)
+            {
+                playerBody.affectedByGravity_ = true;
+
+                if(playerBody.position.y <= groundLevel)
+                {
+                    playerCharacter.playerState = PlayerState::IDLE;
+                }
+
+            }
+        }
+
+    	if(playerCharacter.playerState != PlayerState::DASH)
+        {
+        	const auto PlayerMoveHorizontal = ((left ? -1.0f : 0.0f) + (right ? 1.0f : 0.0f)) * playerSpeed;
+			playerBody.velocity.x = PlayerMoveHorizontal;
+
+            if(playerCharacter.playerState == PlayerState::IDLE && PlayerMoveHorizontal != 0.0f)
+            {
+                playerCharacter.playerState = PlayerState::MOVE;
+            }
+            if(playerCharacter.playerState == PlayerState::MOVE && PlayerMoveHorizontal== 0.0f)
+            {
+                playerCharacter.playerState = PlayerState::IDLE;
+            }
+        }
+
+        if(playerCharacter.playerState == PlayerState::MOVE || playerCharacter.playerState == PlayerState::IDLE)
+        {
+            if(up == 1)
+            {
+                playerCharacter.actualJumpTime = 0.0f;
+                playerBody.affectedByGravity_ = false;
+                playerBody.velocity.y = playerJumpSpeed;
+                playerCharacter.playerState = PlayerState::JUMP;
+            }
+
+        }
+
+
 
         physicsManager_.SetBody(playerEntity, playerBody);
+        SetComponent(playerEntity, playerCharacter);
 
         if (playerCharacter.invincibilityTime > 0.0f)
         {
@@ -61,7 +122,9 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
             playerCharacter.shootingTime += dt.asSeconds();
             SetComponent(playerEntity, playerCharacter);
         }
-        //Shooting mechanism
+
+        //Shooting mechanism//todo delet this
+        /*
         if (playerCharacter.shootingTime >= playerShootingPeriod)
         {
             if (input & PlayerInputEnum::PlayerInput::SHOOT)
@@ -78,6 +141,7 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
                 SetComponent(playerEntity, playerCharacter);
             }
         }
+        */
     }
 }
 }

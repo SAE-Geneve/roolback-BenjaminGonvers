@@ -117,6 +117,11 @@ private:
      * \param dt is the delta time used for adding correctly the gravity
      */
     void ResolveGravity(sf::Time dt);
+    /**
+     * \brief check if any entity that is affected by gravity can't go underworld(below the map) and if tje entity
+     * is below, place the entity upward the ground and set is vertical velocity to 0.
+     */
+    void ResolveGround();
 
     core::Vec2f gravity_{ 0.0f,-9.81f };
 

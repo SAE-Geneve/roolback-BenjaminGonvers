@@ -20,7 +20,7 @@ class GameManager;
  * \brief BulletManager is a ComponentManager that holds all the Bullet in one place.
  * It will automatically destroy the Bullet when remainingTime is over.
  */
-class BulletManager : public core::ComponentManager<Bullet, static_cast<core::EntityMask>(ComponentType::BULLET)>
+class BulletManager : public core::ComponentManager<Bullet, static_cast<core::EntityMask>(ComponentType::PLAYER_ATTACK)>
 {
 public:
     explicit BulletManager(core::EntityManager& entityManager, GameManager& gameManager);

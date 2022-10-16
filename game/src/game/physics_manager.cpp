@@ -41,6 +41,7 @@ void PhysicsManager::FixedUpdate(sf::Time dt)
     UpdatePositionFromVelocity(dt);
 	ResolveCollision();
 	ResolveGravity(dt);
+    ResolveGround();
 
 }
 
@@ -180,5 +181,23 @@ void PhysicsManager::Draw(sf::RenderTarget& renderTarget)
                 bodyManager_.SetComponent(entity, body);
             }
         }
+	}
+
+    void PhysicsManager::ResolveGround()
+	{
+        for (core::Entity entity = 0; entity < entityManager_.GetEntitiesSize(); entity++)
+        {
+            if (!entityManager_.HasComponent(entity, static_cast<core::EntityMask>(core::ComponentType::BODY2D)))
+                continue;
+
+            auto body = bodyManager_.GetComponent(entity);
+            if (body.affectedByGravity_ && body.position.y <= groundLevel)
+            {
+                body.position.y = groundLevel;
+                body.velocity.y = 0.0f;
+                bodyManager_.SetComponent(entity, body);
+            }
+        }
+
 	}
 }
