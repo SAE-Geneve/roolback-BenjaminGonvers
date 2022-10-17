@@ -177,7 +177,7 @@ void PhysicsManager::Draw(sf::RenderTarget& renderTarget)
             auto body = bodyManager_.GetComponent(entity);
             if(body.affectedByGravity_)
             {
-                body.velocity += gravity_ * dt.asSeconds();
+                body.velocity += gravity * dt.asSeconds();
                 bodyManager_.SetComponent(entity, body);
             }
         }

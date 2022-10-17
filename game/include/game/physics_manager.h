@@ -123,7 +123,6 @@ private:
      */
     void ResolveGround();
 
-    core::Vec2f gravity_{ 0.0f,-9.81f };
 
 	core::EntityManager& entityManager_;
     BodyManager bodyManager_;

@@ -39,6 +39,8 @@ constexpr short playerHealth = 5;
 constexpr float playerSpeed = 1.0f;
 constexpr float playerJumpSpeed = 1.0f;
 constexpr float playerJumpFlyTime = 1.0f;
+constexpr float playerDashTime = 0.5f;
+constexpr float playerDashSpeed = 10.0f;
 constexpr core::Degree playerAngularSpeed = core::Degree(90.0f);
 constexpr float playerShootingPeriod = 0.3f;
 constexpr float bulletSpeed = 2.0f;
@@ -48,6 +50,8 @@ constexpr float playerInvincibilityPeriod = 1.5f;
 constexpr float invincibilityFlashPeriod = 0.5f;
 constexpr float groundLevel = -2.0f;
 constexpr float timeToDoubleClick = 0.5f;
+constexpr core::Vec2f gravity{ 0.0f,-9.81f };
+    
 
 /**
  * \brief windowBufferSize is the size of input stored by a client. 5 seconds of frame at 50 fps

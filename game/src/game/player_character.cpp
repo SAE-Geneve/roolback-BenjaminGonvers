@@ -29,87 +29,59 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
             continue;
         auto playerBody = physicsManager_.GetBody(playerEntity);
         auto playerCharacter = GetComponent(playerEntity);
-        const auto input = playerCharacter.input;
 
-        const bool right = input & PlayerInputEnum::PlayerInput::RIGHT;
-        const bool left = input & PlayerInputEnum::PlayerInput::LEFT;
-        const bool up = input & PlayerInputEnum::PlayerInput::UP;
-        const bool down = input & PlayerInputEnum::PlayerInput::DOWN;
+        const bool right = playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT;
+        const bool left = playerCharacter.input & PlayerInputEnum::PlayerInput::LEFT;
+        const bool up = playerCharacter.input & PlayerInputEnum::PlayerInput::UP;
+        const bool down = playerCharacter.input & PlayerInputEnum::PlayerInput::DOWN;
 
-        const bool isDoubleClick = (right || left) && playerCharacter.doubleClickTime <= timeToDoubleClick;
+        
 
-        if(playerCharacter.doubleClickTime <= timeToDoubleClick)
+        DoubleClickTimeUpdate(dt, playerCharacter);
+
+        switch (playerCharacter.playerState)
         {
-            playerCharacter.doubleClickTime += dt.asSeconds();
-        }else if(right || left)
-        {
-            playerCharacter.doubleClickTime = 0.0f;
-        }
-
-        //todo delete comment lower comment (angular velocity[origin])
-		/*
-        const auto angularVelocity = ((left ? -1.0f : 0.0f) + (right ? 1.0f : 0.0f)) * playerAngularSpeed;
-
-        playerBody.angularVelocity = angularVelocity;
-        */
-
-        //todo delete comment lower comment (acelleration[origin])
-        /*
-    	auto dir = core::Vec2f::up();
-        dir = dir.Rotate(-(playerBody.rotation + playerBody.angularVelocity * dt.asSeconds()));
-
-        const auto acceleration = ((down ? -1.0f : 0.0f) + (up ? 1.0f : 0.0f)) * dir;
-
-
-        playerBody.velocity += acceleration * dt.asSeconds();
-        */
-        if (playerCharacter.playerState == PlayerState::JUMP)
-        {
-            playerCharacter.actualJumpTime += dt.asSeconds();
-
-            if (playerCharacter.actualJumpTime >= playerJumpFlyTime)
-            {
-                playerBody.affectedByGravity_ = true;
-
-                if(playerBody.position.y <= groundLevel)
-                {
-                    playerCharacter.playerState = PlayerState::IDLE;
-                }
-
-            }
-        }
-
-    	if(playerCharacter.playerState != PlayerState::DASH)
-        {
-        	const auto PlayerMoveHorizontal = ((left ? -1.0f : 0.0f) + (right ? 1.0f : 0.0f)) * playerSpeed;
-			playerBody.velocity.x = PlayerMoveHorizontal;
-
-            if(playerCharacter.playerState == PlayerState::IDLE && PlayerMoveHorizontal != 0.0f)
-            {
-                playerCharacter.playerState = PlayerState::MOVE;
-            }
-            if(playerCharacter.playerState == PlayerState::MOVE && PlayerMoveHorizontal== 0.0f)
-            {
-                playerCharacter.playerState = PlayerState::IDLE;
-            }
-        }
-
-        if(playerCharacter.playerState == PlayerState::MOVE || playerCharacter.playerState == PlayerState::IDLE)
-        {
-            if(up == 1)
-            {
-                playerCharacter.actualJumpTime = 0.0f;
-                playerBody.affectedByGravity_ = false;
-                playerBody.velocity.y = playerJumpSpeed;
-                playerCharacter.playerState = PlayerState::JUMP;
-            }
+        case PlayerState::IDLE:
+            if(CanGoToDash(playerCharacter,playerBody))
+                break;
+            if(CanGoToJump(playerCharacter))
+                break;
+            if(CanGoToMove(playerCharacter,playerBody))
+				break;
+            break;
+        case PlayerState::MOVE:
+            if(ResolveMove(playerCharacter,playerBody))
+                break;
+            if(CanGoToDash(playerCharacter,playerBody))
+                break;
+            if(CanGoToJump(playerCharacter))
+				break;
+            break;
+        case PlayerState::JUMP:
+            if(ResolveJump(dt,playerCharacter,playerBody))
+				break;
+            if(CanGoToDash(playerCharacter, playerBody))
+                break;
+            break;
+        case PlayerState::ATTACK:
+            break;
+        case PlayerState::DASH:
+            if(ResolveDash(dt, playerCharacter))
+                break;
+            break;
+        case PlayerState::STUN:
+            break;
+        case PlayerState::INVALID_STATE:
+            break;
 
         }
 
-
-
-        physicsManager_.SetBody(playerEntity, playerBody);
+        updateOldClick(playerCharacter);
+        
+    	physicsManager_.SetBody(playerEntity, playerBody);
         SetComponent(playerEntity, playerCharacter);
+
+
 
         if (playerCharacter.invincibilityTime > 0.0f)
         {
@@ -123,7 +95,7 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
             SetComponent(playerEntity, playerCharacter);
         }
 
-        //Shooting mechanism//todo delet this
+        //Shooting mechanism//todo delete this
         /*
         if (playerCharacter.shootingTime >= playerShootingPeriod)
         {
@@ -142,6 +114,139 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
             }
         }
         */
+       
     }
 }
+
+void PlayerCharacterManager::DoubleClickTimeUpdate(const sf::Time dt,PlayerCharacter &playerCharacter)
+{
+
+    if (playerCharacter.oldRightClick && !(playerCharacter.input& PlayerInputEnum::PlayerInput::RIGHT))
+    {
+        playerCharacter.doubleClickTimeRight = 0.0f;
+    }
+
+    if (playerCharacter.oldLeftClick && !(playerCharacter.input & PlayerInputEnum::PlayerInput::LEFT))
+    {
+        playerCharacter.doubleClickTimeLeft = 0.0f;
+    }
+
+    playerCharacter.doubleClickTimeRight += dt.asSeconds();
+    playerCharacter.doubleClickTimeLeft += dt.asSeconds();
+
 }
+
+bool PlayerCharacterManager::CanGoToDash(PlayerCharacter& playerCharacter,Body& playerBody)
+{
+    if (playerCharacter.input & PlayerInputEnum::PlayerInput::LEFT && !playerCharacter.oldLeftClick && playerCharacter.doubleClickTimeLeft <= timeToDoubleClick
+        || playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT && !playerCharacter.oldRightClick && playerCharacter.doubleClickTimeRight <= timeToDoubleClick)
+    {
+        playerCharacter.playerState = PlayerState::DASH;
+        playerBody.velocity = core::Vec2f( playerDashSpeed* ((playerCharacter.input & PlayerInputEnum::PlayerInput::LEFT ? -1.0f : 0.0f) + (playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT ? 1.0f : 0.0f)),0.0f);
+        playerCharacter.actualDashTime = 0.0f;
+        return true;
+    }
+    return false;
+}
+
+bool PlayerCharacterManager::ResolveDash(const sf::Time dt, PlayerCharacter& playerCharacter)
+{
+    playerCharacter.actualDashTime += dt.asSeconds();
+    if (playerCharacter.actualDashTime >= playerDashTime)
+    {
+        playerCharacter.playerState = PlayerState::IDLE;
+        return true;
+    }
+    return false;
+}
+
+bool PlayerCharacterManager::CanGoToJump(PlayerCharacter& playerCharacter)
+{
+    if (playerCharacter.input & PlayerInputEnum::PlayerInput::UP)
+    {
+        playerCharacter.actualJumpTime = 0.0f;
+        
+        playerCharacter.playerState = PlayerState::JUMP;
+        return true;
+    }
+    return false;
+}
+
+bool PlayerCharacterManager::ResolveJump(const sf::Time dt, PlayerCharacter& playerCharacter, Body& playerBody)
+{
+    playerCharacter.actualJumpTime += dt.asSeconds();
+
+    if (playerCharacter.actualJumpTime <= playerJumpFlyTime)
+    {
+        playerBody.velocity.y = playerJumpSpeed - gravity.y * dt.asSeconds();
+    }
+
+    if (playerCharacter.actualJumpTime >= playerJumpFlyTime && playerBody.position.y <= groundLevel)
+    {
+        playerCharacter.playerState = PlayerState::IDLE;
+        return true;
+    }
+    return  false;
+}
+
+bool PlayerCharacterManager::CanGoToMove(PlayerCharacter& playerCharacter,Body& playerBody)
+{
+    const auto PlayerMoveHorizontal = (playerCharacter.input & PlayerInputEnum::PlayerInput::LEFT ? -1.0f : 0.0f) +
+														(playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT ? 1.0f : 0.0f) * playerSpeed;
+
+	playerBody.velocity.x = PlayerMoveHorizontal;
+
+	if (playerCharacter.playerState == PlayerState::IDLE && PlayerMoveHorizontal != 0.0f)
+	{
+            playerCharacter.playerState = PlayerState::MOVE;
+            return true;
+	}
+    return false;
+}
+
+
+bool PlayerCharacterManager::ResolveMove(PlayerCharacter& playerCharacter, Body& playerBody)
+{
+	const auto PlayerMoveHorizontal = (playerCharacter.input & PlayerInputEnum::PlayerInput::LEFT ? -1.0f : 0.0f) +
+														(playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT ? 1.0f : 0.0f) * playerSpeed;
+
+	playerBody.velocity.x = PlayerMoveHorizontal;
+
+	if (playerCharacter.playerState == PlayerState::MOVE && playerBody.velocity.x == 0.0f)
+    {
+        playerCharacter.playerState = PlayerState::IDLE;
+        return true;
+    }
+    return false;
+}
+
+void PlayerCharacterManager::Move(PlayerCharacter& playerCharacter, Body& playerBody)
+{
+    const auto PlayerMoveHorizontal = (playerCharacter.input & PlayerInputEnum::PlayerInput::LEFT ? -1.0f : 0.0f) +
+        (playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT ? 1.0f : 0.0f) * playerSpeed;
+
+    playerBody.velocity.x = PlayerMoveHorizontal;
+}
+void PlayerCharacterManager::updateOldClick(PlayerCharacter& playerCharacter)
+{
+    if (playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT)
+    {
+        playerCharacter.oldRightClick = true;
+    }
+    else
+    {
+        playerCharacter.oldRightClick = false;
+    }
+
+    if (playerCharacter.input & PlayerInputEnum::PlayerInput::LEFT)
+    {
+        playerCharacter.oldLeftClick = true;
+    }
+    else
+    {
+        playerCharacter.oldLeftClick = false;
+
+}
+}
+
+
