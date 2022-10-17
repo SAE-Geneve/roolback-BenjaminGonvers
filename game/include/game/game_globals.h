@@ -119,7 +119,7 @@ enum PlayerInput : std::uint8_t
     DOWN = 1u << 1u,
     LEFT = 1u << 2u,
     RIGHT = 1u << 3u,
-    SHOOT = 1u << 4u,
+    ATTACK = 1u << 4u,
 };
 }
 }

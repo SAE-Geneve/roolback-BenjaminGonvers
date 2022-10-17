@@ -76,7 +76,7 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
 
 
 
-        if (playerCharacter.invincibilityTime > 0.0f)
+        /*if (playerCharacter.invincibilityTime > 0.0f)
         {
             playerCharacter.invincibilityTime -= dt.asSeconds();
             SetComponent(playerEntity, playerCharacter);
@@ -86,13 +86,13 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
         {
             playerCharacter.shootingTime += dt.asSeconds();
             SetComponent(playerEntity, playerCharacter);
-        }
+        }*/
 
         //Shooting mechanism//todo delete this
         /*
         if (playerCharacter.shootingTime >= playerShootingPeriod)
         {
-            if (input & PlayerInputEnum::PlayerInput::SHOOT)
+            if (input & PlayerInputEnum::PlayerInput::ATTACK)
             {
                 const auto currentPlayerSpeed = playerBody.velocity.GetMagnitude();
                 const auto bulletVelocity = dir *
@@ -126,6 +126,28 @@ void PlayerCharacterManager::DoubleClickTimeUpdate(const sf::Time dt,PlayerChara
 
     playerCharacter.doubleClickTimeRight += dt.asSeconds();
     playerCharacter.doubleClickTimeLeft += dt.asSeconds();
+
+}
+
+void PlayerCharacterManager::updateOldClick(PlayerCharacter& playerCharacter)
+{
+    if (playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT)
+    {
+        playerCharacter.oldRightClick = true;
+    }
+    else
+    {
+        playerCharacter.oldRightClick = false;
+    }
+
+    if (playerCharacter.input & PlayerInputEnum::PlayerInput::LEFT)
+    {
+        playerCharacter.oldLeftClick = true;
+    }
+    else
+    {
+        playerCharacter.oldLeftClick = false;
+    }
 
 }
 
@@ -220,27 +242,15 @@ void PlayerCharacterManager::Move(PlayerCharacter& playerCharacter, Body& player
 
     playerBody.velocity.x = PlayerMoveHorizontal;
 }
-void PlayerCharacterManager::updateOldClick(PlayerCharacter& playerCharacter)
+/*//todo
+bool PlayerCharacterManager::CanGoToAttack(const sf::Time dt, PlayerCharacter& playerCharacter, Body& playerBody)
 {
-    if (playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT)
-    {
-        playerCharacter.oldRightClick = true;
-    }
-    else
-    {
-        playerCharacter.oldRightClick = false;
-    }
-
-    if (playerCharacter.input & PlayerInputEnum::PlayerInput::LEFT)
-    {
-        playerCharacter.oldLeftClick = true;
-    }
-    else
-    {
-        playerCharacter.oldLeftClick = false;
-    }
-
+	if(playerCharacter.input & PlayerInputEnum::PlayerInput::ATTACK)
+	{
+		//todo the check
+	}
 }
+*/
 }
 
 

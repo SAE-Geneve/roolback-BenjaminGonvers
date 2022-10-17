@@ -20,7 +20,7 @@ PlayerInput GetPlayerInput(int index)
         clientInput1 = clientInput1 | (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) ?
                 PlayerInputEnum::PlayerInput::DOWN : PlayerInputEnum::PlayerInput::NONE);
         clientInput1 = clientInput1 | (sf::Keyboard::isKeyPressed(sf::Keyboard::RControl) ?
-                PlayerInputEnum::PlayerInput::SHOOT : PlayerInputEnum::PlayerInput::NONE);
+                PlayerInputEnum::PlayerInput::ATTACK : PlayerInputEnum::PlayerInput::NONE);
 
         return clientInput1;
     }
@@ -36,7 +36,7 @@ PlayerInput GetPlayerInput(int index)
         clientInput2 = clientInput2 | (sf::Keyboard::isKeyPressed(sf::Keyboard::S) ?
                 PlayerInputEnum::PlayerInput::DOWN : PlayerInputEnum::PlayerInput::NONE);
         clientInput2 = clientInput2 | (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) ?
-                PlayerInputEnum::PlayerInput::SHOOT : PlayerInputEnum::PlayerInput::NONE);
+                PlayerInputEnum::PlayerInput::ATTACK : PlayerInputEnum::PlayerInput::NONE);
         return clientInput2;
     }
     default:
