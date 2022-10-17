@@ -30,13 +30,6 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
         auto playerBody = physicsManager_.GetBody(playerEntity);
         auto playerCharacter = GetComponent(playerEntity);
 
-        const bool right = playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT;
-        const bool left = playerCharacter.input & PlayerInputEnum::PlayerInput::LEFT;
-        const bool up = playerCharacter.input & PlayerInputEnum::PlayerInput::UP;
-        const bool down = playerCharacter.input & PlayerInputEnum::PlayerInput::DOWN;
-
-        
-
         DoubleClickTimeUpdate(dt, playerCharacter);
 
         switch (playerCharacter.playerState)
@@ -245,6 +238,7 @@ void PlayerCharacterManager::updateOldClick(PlayerCharacter& playerCharacter)
     else
     {
         playerCharacter.oldLeftClick = false;
+    }
 
 }
 }
