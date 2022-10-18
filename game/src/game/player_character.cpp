@@ -35,11 +35,12 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
         switch (playerCharacter.playerState)
         {
         case PlayerState::IDLE:
+            ResolveIdle(playerBody);
+        	if(CanGoToJump(playerCharacter))
+                break;
             if(CanGoToDash(playerCharacter,playerBody))
                 break;
-            if(CanGoToJump(playerCharacter))
-                break;
-            if(CanGoToMove(playerCharacter,playerBody))
+        	if(CanGoToMove(playerCharacter,playerBody))
 				break;
             break;
         case PlayerState::MOVE:
@@ -57,12 +58,17 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
                 break;
             break;
         case PlayerState::ATTACK:
+            //todo
             break;
         case PlayerState::DASH:
-            if(ResolveDash(dt, playerCharacter))
+            if(ResolveDash(dt, playerCharacter,playerBody))
                 break;
             break;
         case PlayerState::STUN:
+            //todo
+            break;
+        case PlayerState::SPAWN:
+            //todo
             break;
         case PlayerState::INVALID_STATE:
             break;
@@ -75,7 +81,7 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
         SetComponent(playerEntity, playerCharacter);
 
 
-
+        //todo delete this
         /*if (playerCharacter.invincibilityTime > 0.0f)
         {
             playerCharacter.invincibilityTime -= dt.asSeconds();
@@ -88,7 +94,7 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
             SetComponent(playerEntity, playerCharacter);
         }*/
 
-        //Shooting mechanism//todo delete this
+        //Shooting mechanism
         /*
         if (playerCharacter.shootingTime >= playerShootingPeriod)
         {
@@ -164,11 +170,13 @@ bool PlayerCharacterManager::CanGoToDash(PlayerCharacter& playerCharacter,Body& 
     return false;
 }
 
-bool PlayerCharacterManager::ResolveDash(const sf::Time dt, PlayerCharacter& playerCharacter)
+bool PlayerCharacterManager::ResolveDash(const sf::Time dt, PlayerCharacter& playerCharacter,Body& playerBody)
 {
     playerCharacter.actualDashTime += dt.asSeconds();
     if (playerCharacter.actualDashTime >= playerDashTime)
     {
+        if (CanGoToMove(playerCharacter, playerBody))
+            return true;
         playerCharacter.playerState = PlayerState::IDLE;
         return true;
     }
@@ -191,6 +199,8 @@ bool PlayerCharacterManager::ResolveJump(const sf::Time dt, PlayerCharacter& pla
 {
     playerCharacter.actualJumpTime += dt.asSeconds();
 
+    Move(playerCharacter,playerBody);
+
     if (playerCharacter.actualJumpTime <= playerJumpFlyTime)
     {
         playerBody.velocity.y = playerJumpSpeed - gravity.y * dt.asSeconds();
@@ -198,6 +208,8 @@ bool PlayerCharacterManager::ResolveJump(const sf::Time dt, PlayerCharacter& pla
 
     if (playerCharacter.actualJumpTime >= playerJumpFlyTime && playerBody.position.y <= groundLevel)
     {
+        if (CanGoToMove(playerCharacter, playerBody))
+            return true;
         playerCharacter.playerState = PlayerState::IDLE;
         return true;
     }
@@ -211,7 +223,7 @@ bool PlayerCharacterManager::CanGoToMove(PlayerCharacter& playerCharacter,Body& 
 
 	playerBody.velocity.x = PlayerMoveHorizontal;
 
-	if (playerCharacter.playerState == PlayerState::IDLE && PlayerMoveHorizontal != 0.0f)
+	if (PlayerMoveHorizontal != 0.0f)
 	{
             playerCharacter.playerState = PlayerState::MOVE;
             return true;
@@ -222,17 +234,15 @@ bool PlayerCharacterManager::CanGoToMove(PlayerCharacter& playerCharacter,Body& 
 
 bool PlayerCharacterManager::ResolveMove(PlayerCharacter& playerCharacter, Body& playerBody)
 {
-	const auto PlayerMoveHorizontal = (playerCharacter.input & PlayerInputEnum::PlayerInput::LEFT ? -1.0f : 0.0f) +
-														(playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT ? 1.0f : 0.0f) * playerSpeed;
+    Move(playerCharacter, playerBody);
 
-	playerBody.velocity.x = PlayerMoveHorizontal;
-
-	if (playerCharacter.playerState == PlayerState::MOVE && playerBody.velocity.x == 0.0f)
+	if (playerBody.velocity.x == 0.0f)
     {
         playerCharacter.playerState = PlayerState::IDLE;
         return true;
     }
     return false;
+
 }
 
 void PlayerCharacterManager::Move(PlayerCharacter& playerCharacter, Body& playerBody)
@@ -242,15 +252,36 @@ void PlayerCharacterManager::Move(PlayerCharacter& playerCharacter, Body& player
 
     playerBody.velocity.x = PlayerMoveHorizontal;
 }
-/*//todo
-bool PlayerCharacterManager::CanGoToAttack(const sf::Time dt, PlayerCharacter& playerCharacter, Body& playerBody)
+
+
+bool PlayerCharacterManager::CanGoToAttack(PlayerCharacter& playerCharacter)
 {
 	if(playerCharacter.input & PlayerInputEnum::PlayerInput::ATTACK)
 	{
-		//todo the check
+        playerCharacter.playerState = PlayerState::ATTACK;
+        return true;
 	}
+    return false;
 }
-*/
+
+bool PlayerCharacterManager::ResolveAttack(PlayerCharacter& playerCharacter,const Body& playerBody,const core::Entity playerEntity)
+{
+    if (playerCharacter.input & PlayerInputEnum::PlayerInput::ATTACK)
+    {
+        const auto bulletPosition = playerBody.position;
+        gameManager_.SpawnBullet(playerCharacter.playerNumber,
+            bulletPosition, core::Vec2f::one());
+        playerCharacter.shootingTime = 0.0f;
+        SetComponent(playerEntity, playerCharacter);
+    }
+
+return false;
+}
+
+void PlayerCharacterManager::ResolveIdle(Body& playerBody)
+{
+    playerBody.velocity = core::Vec2f{0.0f,playerBody.velocity.y};
+}
 }
 
 

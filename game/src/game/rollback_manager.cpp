@@ -317,12 +317,12 @@ PlayerInput RollbackManager::GetInputAtFrame(PlayerNumber playerNumber, Frame fr
 
 void RollbackManager::OnTrigger(core::Entity entity1, core::Entity entity2)
 {
-    const std::function<void(const PlayerCharacter&, core::Entity, const Bullet&, core::Entity)> ManageCollision =
+    const std::function<void(const PlayerCharacter&, core::Entity, const Attack&, core::Entity)> ManageCollision =
         [this](const auto& player, auto playerEntity, const auto& bullet, auto bulletEntity)
     {
         if (player.playerNumber != bullet.playerNumber)
         {
-            gameManager_.DestroyBullet(bulletEntity);
+            gameManager_.DestroyAttackBox(bulletEntity);
             //lower health point
             auto playerCharacter = currentPlayerManager_.GetComponent(playerEntity);
             if (playerCharacter.invincibilityTime <= 0.0f)

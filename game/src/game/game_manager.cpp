@@ -78,7 +78,7 @@ core::Entity GameManager::SpawnBullet(PlayerNumber playerNumber, core::Vec2f pos
     return entity;
 }
 
-void GameManager::DestroyBullet(core::Entity entity)
+void GameManager::DestroyAttackBox(core::Entity entity)
 {
     rollbackManager_.DestroyEntity(entity);
 }

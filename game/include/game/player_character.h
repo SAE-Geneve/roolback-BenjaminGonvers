@@ -18,7 +18,8 @@ namespace game
         JUMP,
         ATTACK,
         DASH,
-        STUN
+        STUN,
+        SPAWN,
     };
 class PhysicsManager;
 /**
@@ -83,9 +84,10 @@ private:
      * \brief resolve the dash state and if the dash finish tell the player Character to go in idle state
      * \param dt delta time for update the time elapse of the dash state
      * \param playerCharacter player in dash state
+     * \Param playerBody body of the player in dash state
      * \return true if a change state occurs, otherwise false
      */
-    bool ResolveDash(sf::Time dt, PlayerCharacter& playerCharacter);
+    bool ResolveDash(sf::Time dt, PlayerCharacter& playerCharacter,Body& playerBody);
     /**
      * \brief Check if the player go to jump state, if yes change the state to jump and doing the init of the jump state, if no do nothing
      * \param playerCharacter player we check
@@ -120,5 +122,9 @@ private:
      * \param playerBody body of the player who can move
      */
     void Move(PlayerCharacter& playerCharacter, Body& playerBody);
+    
+	bool CanGoToAttack(PlayerCharacter& playerCharacter);
+    bool ResolveAttack(PlayerCharacter& playerCharacter,const Body& playerBody, const core::Entity playerEntity);
+    void ResolveIdle(Body& playerBody);
 };
 }

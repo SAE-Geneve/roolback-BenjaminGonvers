@@ -103,6 +103,7 @@ enum class ComponentType : core::EntityMask
     PLATFORM = static_cast<core::EntityMask>(core::ComponentType::OTHER_TYPE) << 2u,
     PLAYER_INPUT = static_cast<core::EntityMask>(core::ComponentType::OTHER_TYPE) << 3u,
     DESTROYED = static_cast<core::EntityMask>(core::ComponentType::OTHER_TYPE) << 4u,
+    PLAYER_DASH = static_cast<core::EntityMask>(core::ComponentType::OTHER_TYPE) << 5u,
 };
 
 /**

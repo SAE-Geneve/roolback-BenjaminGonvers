@@ -1,4 +1,4 @@
-#include "game/bullet_manager.h"
+#include "game/attack_manager.h"
 #include "game/game_manager.h"
 
 #ifdef TRACY_ENABLE
@@ -6,12 +6,12 @@
 #endif
 namespace game
 {
-BulletManager::BulletManager(core::EntityManager& entityManager, GameManager& gameManager) :
+AttackManager::AttackManager(core::EntityManager& entityManager, GameManager& gameManager) :
     ComponentManager(entityManager), gameManager_(gameManager)
 {
 }
 
-void BulletManager::FixedUpdate(sf::Time dt)
+void AttackManager::FixedUpdate(sf::Time dt)
 {
 
 #ifdef TRACY_ENABLE
@@ -25,12 +25,7 @@ void BulletManager::FixedUpdate(sf::Time dt)
         }
         if (entityManager_.HasComponent(entity, static_cast<core::EntityMask>(ComponentType::PLAYER_ATTACK)))
         {
-            auto& bullet = components_[entity];
-            bullet.remainingTime -= dt.asSeconds();
-            if (bullet.remainingTime < 0.0f)
-            {
-                gameManager_.DestroyBullet(entity);
-            }
+        	gameManager_.DestroyAttackBox(entity);
         }
     }
 }
