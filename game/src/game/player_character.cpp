@@ -10,7 +10,6 @@ PlayerCharacterManager::PlayerCharacterManager(core::EntityManager& entityManage
     ComponentManager(entityManager),
     physicsManager_(physicsManager),
     gameManager_(gameManager)
-
 {
 
 }
@@ -268,9 +267,9 @@ bool PlayerCharacterManager::ResolveAttack(PlayerCharacter& playerCharacter,cons
 {
     if (playerCharacter.input & PlayerInputEnum::PlayerInput::ATTACK)
     {
-        const auto bulletPosition = playerBody.position;
-        gameManager_.SpawnBullet(playerCharacter.playerNumber,
-            bulletPosition, core::Vec2f::one());
+        const auto attackPosition = playerBody.position;
+        gameManager_.SpawnBullet(playerCharacter.playerNumber,//todo
+            attackPosition, core::Vec2f::one());
         playerCharacter.shootingTime = 0.0f;
         SetComponent(playerEntity, playerCharacter);
     }
