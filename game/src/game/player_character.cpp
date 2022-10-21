@@ -74,7 +74,7 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
 
         }
 
-        updateOldClick(playerCharacter);
+        UpdateOldClick(playerCharacter);
         
     	physicsManager_.SetBody(playerEntity, playerBody);
         SetComponent(playerEntity, playerCharacter);
@@ -134,7 +134,7 @@ void PlayerCharacterManager::DoubleClickTimeUpdate(const sf::Time dt,PlayerChara
 
 }
 
-void PlayerCharacterManager::updateOldClick(PlayerCharacter& playerCharacter)
+void PlayerCharacterManager::UpdateOldClick(PlayerCharacter& playerCharacter)
 {
     if (playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT)
     {

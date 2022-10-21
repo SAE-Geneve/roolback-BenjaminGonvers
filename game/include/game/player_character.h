@@ -8,7 +8,6 @@ namespace game
 {
 	/**
 	 * \brief it's give the actual state behavior of the player object,
-	 * if INVALID the player doesn't exist physically
 	 */
 	enum class PlayerState
     {
@@ -36,9 +35,7 @@ struct PlayerCharacter
     float actualDashTime = 0.0f;
     float doubleClickTimeRight = timeToDoubleClick + 1.0f;
     float doubleClickTimeLeft = timeToDoubleClick + 1.0f;
-
     PlayerState playerState = PlayerState::IDLE;
-
     /*
      *The continuous boolean var is for have the upward front this is use for double clicking
     */
@@ -72,7 +69,7 @@ private:
      * \brief update the oldClick to be the actual click for the next frame WARNING use that after all action, if not some misbehavior can occur
      * \param playerCharacter the player where the click need to be set
      */
-    void updateOldClick(PlayerCharacter& playerCharacter);
+    void UpdateOldClick(PlayerCharacter& playerCharacter);
     /**
      * \brief Check if the player go to dash state, if yes change the state to dash and doing the init of the dash state, if no do nothing
      * \param playerCharacter player we check
@@ -122,7 +119,8 @@ private:
      * \param playerBody body of the player who can move
      */
     void Move(PlayerCharacter& playerCharacter, Body& playerBody);
-    
+
+    //todo 
 	bool CanGoToAttack(PlayerCharacter& playerCharacter);
     bool ResolveAttack(PlayerCharacter& playerCharacter,const Body& playerBody, const core::Entity playerEntity);
     void ResolveIdle(Body& playerBody);
