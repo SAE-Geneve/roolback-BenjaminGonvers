@@ -155,7 +155,7 @@ void ClientGameManager::Update(sf::Time dt)
                 static_cast<core::EntityMask>(core::ComponentType::SPRITE)))
             {
                 const auto& player = rollbackManager_.GetPlayerCharacterManager().GetComponent(entity);
-                /*
+                /* //todo
                 if (player.invincibilityTime > 0.0f)
                 {
                     //auto leftV = std::fmod(player.invincibilityTime, invincibilityFlashPeriod);
@@ -506,6 +506,7 @@ void ClientGameManager::UpdateCameraView()
         }
     }
     cameraView_.zoom(currentZoom);
+    
 
 }
 }

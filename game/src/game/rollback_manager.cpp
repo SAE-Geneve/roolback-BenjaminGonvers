@@ -340,7 +340,8 @@ void RollbackManager::OnTrigger(core::Entity entity1, core::Entity entity2)
     const std::function<void(const PlayerCharacter&, core::Entity, const PlayerCharacter&, core::Entity)> ManageCollisionPlayer =
         [this](const auto& firstPlayer, auto firstPlayerEntity, const auto& secondPlayer, auto secondPlayerEntity)
     {
-        if (firstPlayer.playerNumber != secondPlayer.playerNumber)
+        if (firstPlayer.playerNumber != secondPlayer.playerNumber &&
+            !(firstPlayer.playerState == PlayerState::DASH || secondPlayer.playerState == PlayerState::DASH))
         {
             auto firstPlayerBody = currentPhysicsManager_.GetBody(firstPlayerEntity);
             const auto firstPlayerBox = currentPhysicsManager_.GetBox(firstPlayerEntity);
@@ -430,6 +431,10 @@ void RollbackManager::OnTrigger(core::Entity entity1, core::Entity entity2)
             currentPhysicsManager_.SetBody(firstPlayerEntity, firstPlayerBody);
             currentPhysicsManager_.SetBody(secondPlayerEntity, secondPlayerBody);
 
+        }
+        else 
+        {
+         //todo dash variant
         }
     };
 

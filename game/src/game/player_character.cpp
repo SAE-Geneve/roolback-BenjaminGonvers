@@ -217,12 +217,9 @@ bool PlayerCharacterManager::ResolveJump(const sf::Time dt, PlayerCharacter& pla
 
 bool PlayerCharacterManager::CanGoToMove(PlayerCharacter& playerCharacter,Body& playerBody)
 {
-    const auto PlayerMoveHorizontal = (playerCharacter.input & PlayerInputEnum::PlayerInput::LEFT ? -1.0f : 0.0f) +
-														(playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT ? 1.0f : 0.0f) * playerSpeed;
+    Move(playerCharacter, playerBody);
 
-	playerBody.velocity.x = PlayerMoveHorizontal;
-
-	if (PlayerMoveHorizontal != 0.0f)
+	if (playerBody.velocity.x != 0.0f)
 	{
             playerCharacter.playerState = PlayerState::MOVE;
             return true;
@@ -250,6 +247,14 @@ void PlayerCharacterManager::Move(PlayerCharacter& playerCharacter, Body& player
         (playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT ? 1.0f : 0.0f) * playerSpeed;
 
     playerBody.velocity.x = PlayerMoveHorizontal;
+
+    if (PlayerMoveHorizontal > 0) {
+        playerCharacter.playerFaceRight = true;
+    }
+
+    if (PlayerMoveHorizontal < 0) {
+        playerCharacter.playerFaceRight = false;
+    }
 }
 
 
@@ -268,7 +273,7 @@ bool PlayerCharacterManager::ResolveAttack(PlayerCharacter& playerCharacter,cons
     if (playerCharacter.input & PlayerInputEnum::PlayerInput::ATTACK)
     {
         const auto attackPosition = playerBody.position;
-        gameManager_.SpawnBullet(playerCharacter.playerNumber,//todo
+        gameManager_.SpawnBullet(playerCharacter.playerNumber,//todo don't work
             attackPosition, core::Vec2f::one());
         playerCharacter.shootingTime = 0.0f;
         SetComponent(playerEntity, playerCharacter);

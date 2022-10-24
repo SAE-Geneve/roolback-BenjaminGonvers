@@ -41,6 +41,7 @@ struct PlayerCharacter
     */
     bool oldRightClick = false;
     bool oldLeftClick = false;
+    bool playerFaceRight = false;
 };
 class GameManager;
 
