@@ -28,7 +28,7 @@ class GameManager
 public:
     GameManager();
     virtual ~GameManager() = default;
-    virtual void SpawnPlayer(PlayerNumber playerNumber, core::Vec2f position, core::Degree rotation);
+    virtual void SpawnPlayer(PlayerNumber playerNumber, core::Vec2f position);
     virtual core::Entity SpawnBullet(PlayerNumber, core::Vec2f position, core::Vec2f velocity);
     virtual void DestroyAttackBox(core::Entity entity);
     [[nodiscard]] core::Entity GetEntityFromPlayerNumber(PlayerNumber playerNumber) const;
@@ -79,9 +79,8 @@ public:
      * \brief SpawnPlayer is method that is called when receiving a SpawnPlayerPacket from the server.
      * \param playerNumber is the player number to be spawned
      * \param position is where the player character will be spawned
-     * \param rotation is the spawning angle of the player character 
      */
-    void SpawnPlayer(PlayerNumber playerNumber, core::Vec2f position, core::Degree rotation) override;
+    void SpawnPlayer(PlayerNumber playerNumber, core::Vec2f position) override;
     core::Entity SpawnBullet(PlayerNumber playerNumber, core::Vec2f position, core::Vec2f velocity) override;
     void FixedUpdate();
     void SetPlayerInput(PlayerNumber playerNumber, PlayerInput playerInput, std::uint32_t inputFrame) override;

@@ -272,7 +272,7 @@ PhysicsState RollbackManager::GetValidatePhysicsState(PlayerNumber playerNumber)
     return state;
 }
 
-void RollbackManager::SpawnPlayer(PlayerNumber playerNumber, core::Entity entity, core::Vec2f position, core::Degree rotation)
+void RollbackManager::SpawnPlayer(PlayerNumber playerNumber, core::Entity entity, core::Vec2f position)
 {
 
 #ifdef TRACY_ENABLE
@@ -280,7 +280,6 @@ void RollbackManager::SpawnPlayer(PlayerNumber playerNumber, core::Entity entity
 #endif
     Body playerBody;
     playerBody.position = position;
-    playerBody.rotation = rotation;
     Box playerBox;
     playerBox.extends = core::Vec2f::one() * 0.25f;
 
@@ -305,7 +304,6 @@ void RollbackManager::SpawnPlayer(PlayerNumber playerNumber, core::Entity entity
 
     currentTransformManager_.AddComponent(entity);
     currentTransformManager_.SetPosition(entity, position);
-    currentTransformManager_.SetRotation(entity, rotation);
 }
 
 PlayerInput RollbackManager::GetInputAtFrame(PlayerNumber playerNumber, Frame frame) const
