@@ -15,9 +15,9 @@ RollbackManager::RollbackManager(GameManager& gameManager, core::EntityManager& 
     gameManager_(gameManager), entityManager_(entityManager),
     currentTransformManager_(entityManager),
     currentPhysicsManager_(entityManager), currentPlayerManager_(entityManager, currentPhysicsManager_, gameManager_),
-    currentBulletManager_(entityManager, gameManager),
+    currentAttackManager_(entityManager, gameManager),
     lastValidatePhysicsManager_(entityManager),
-    lastValidatePlayerManager_(entityManager, lastValidatePhysicsManager_, gameManager_), lastValidateBulletManager_(entityManager, gameManager)
+    lastValidatePlayerManager_(entityManager, lastValidatePhysicsManager_, gameManager_), lastValidateAttackManager_(entityManager, gameManager)
 {
     for (auto& input : inputs_)
     {
@@ -53,7 +53,7 @@ void RollbackManager::SimulateToCurrentFrame()
     }
 
     //Revert the current game state to the last validated game state
-    currentBulletManager_.CopyAllComponents(lastValidateBulletManager_.GetAllComponents());
+    currentAttackManager_.CopyAllComponents(lastValidateAttackManager_.GetAllComponents());
     currentPhysicsManager_.CopyAllComponents(lastValidatePhysicsManager_);
     currentPlayerManager_.CopyAllComponents(lastValidatePlayerManager_.GetAllComponents());
 
@@ -75,7 +75,7 @@ void RollbackManager::SimulateToCurrentFrame()
             currentPlayerManager_.SetComponent(playerEntity, playerCharacter);
         }
         //Simulate one frame of the game
-        currentBulletManager_.FixedUpdate(sf::seconds(fixedPeriod));
+        currentAttackManager_.FixedUpdate(sf::seconds(fixedPeriod));
         currentPlayerManager_.FixedUpdate(sf::seconds(fixedPeriod));
         currentPhysicsManager_.FixedUpdate(sf::seconds(fixedPeriod));
     }
@@ -176,7 +176,7 @@ void RollbackManager::ValidateFrame(Frame newValidateFrame)
     createdEntities_.clear();
 
     //We use the current game state as the temporary new validate game state
-    currentBulletManager_.CopyAllComponents(lastValidateBulletManager_.GetAllComponents());
+    currentAttackManager_.CopyAllComponents(lastValidateAttackManager_.GetAllComponents());
     currentPhysicsManager_.CopyAllComponents(lastValidatePhysicsManager_);
     currentPlayerManager_.CopyAllComponents(lastValidatePlayerManager_.GetAllComponents());
 
@@ -194,7 +194,7 @@ void RollbackManager::ValidateFrame(Frame newValidateFrame)
             currentPlayerManager_.SetComponent(playerEntity, playerCharacter);
         }
         //We simulate one frame
-        currentBulletManager_.FixedUpdate(sf::seconds(fixedPeriod));
+        currentAttackManager_.FixedUpdate(sf::seconds(fixedPeriod));
         currentPlayerManager_.FixedUpdate(sf::seconds(fixedPeriod));
         currentPhysicsManager_.FixedUpdate(sf::seconds(fixedPeriod));
     }
@@ -207,7 +207,7 @@ void RollbackManager::ValidateFrame(Frame newValidateFrame)
         }
     }
     //Copy back the new validate game state to the last validated game state
-    lastValidateBulletManager_.CopyAllComponents(currentBulletManager_.GetAllComponents());
+    lastValidateAttackManager_.CopyAllComponents(currentAttackManager_.GetAllComponents());
     lastValidatePlayerManager_.CopyAllComponents(currentPlayerManager_.GetAllComponents());
     lastValidatePhysicsManager_.CopyAllComponents(currentPhysicsManager_);
     lastValidateFrame_ = newValidateFrame;
@@ -335,11 +335,11 @@ void RollbackManager::OnTrigger(core::Entity entity1, core::Entity entity2)
         }
     };
 
-    const std::function<void(const PlayerCharacter&, core::Entity, const PlayerCharacter&, core::Entity)> ManageCollisionPlayer =
-        [this](const auto& firstPlayer, auto firstPlayerEntity, const auto& secondPlayer, auto secondPlayerEntity)
+    const auto ManageCollisionPlayer =
+        [this](PlayerCharacter& firstPlayer, core::Entity firstPlayerEntity, PlayerCharacter& secondPlayer, core::Entity secondPlayerEntity)
     {
         if (firstPlayer.playerNumber != secondPlayer.playerNumber &&
-            !(firstPlayer.playerState == PlayerState::DASH || secondPlayer.playerState == PlayerState::DASH))
+            !(firstPlayer.playerState == PlayerState::ATTACK || secondPlayer.playerState == PlayerState::ATTACK))
         {
             auto firstPlayerBody = currentPhysicsManager_.GetBody(firstPlayerEntity);
             const auto firstPlayerBox = currentPhysicsManager_.GetBox(firstPlayerEntity);
@@ -429,10 +429,18 @@ void RollbackManager::OnTrigger(core::Entity entity1, core::Entity entity2)
             currentPhysicsManager_.SetBody(firstPlayerEntity, firstPlayerBody);
             currentPhysicsManager_.SetBody(secondPlayerEntity, secondPlayerBody);
 
+            if(firstPlayer.playerState == PlayerState::DASH)
+            {
+                firstPlayer.playerState = PlayerState::STUN;
+            }
+            if(secondPlayer.playerState == PlayerState::DASH)
+            {
+                secondPlayer.playerState = PlayerState::STUN;
+            }
         }
         else 
         {
-         //todo dash variant
+         //todo attack variant
         }
     };
 
@@ -440,7 +448,7 @@ void RollbackManager::OnTrigger(core::Entity entity1, core::Entity entity2)
         entityManager_.HasComponent(entity2, static_cast<core::EntityMask>(ComponentType::PLAYER_ATTACK)))
     {
         const auto& player = currentPlayerManager_.GetComponent(entity1);
-        const auto& attack = currentBulletManager_.GetComponent(entity2);
+        const auto& attack = currentAttackManager_.GetComponent(entity2);
         ManageCollision(player, entity1, attack, entity2);
 
     }
@@ -448,41 +456,39 @@ void RollbackManager::OnTrigger(core::Entity entity1, core::Entity entity2)
         entityManager_.HasComponent(entity1, static_cast<core::EntityMask>(ComponentType::PLAYER_ATTACK)))
     {
         const auto& player = currentPlayerManager_.GetComponent(entity2);
-        const auto& attack = currentBulletManager_.GetComponent(entity1);
+        const auto& attack = currentAttackManager_.GetComponent(entity1);
         ManageCollision(player, entity2, attack, entity1);
     }
 
     if (entityManager_.HasComponent(entity1, static_cast<core::EntityMask>(ComponentType::PLAYER_CHARACTER)) &&
         entityManager_.HasComponent(entity2, static_cast<core::EntityMask>(ComponentType::PLAYER_CHARACTER)))
     {
-        const auto& firstPlayer = currentPlayerManager_.GetComponent(entity2);
-        const auto& secondPlayer = currentPlayerManager_.GetComponent(entity1);
+        auto& firstPlayer = currentPlayerManager_.GetComponent(entity2);
+        auto& secondPlayer = currentPlayerManager_.GetComponent(entity1);
         ManageCollisionPlayer(firstPlayer, entity1, secondPlayer, entity2);
     }
 }
 
-void RollbackManager::SpawnBullet(PlayerNumber playerNumber, core::Entity entity, core::Vec2f position, core::Vec2f velocity)
+void RollbackManager::SpawnAttack(PlayerNumber playerNumber, core::Entity entity, core::Vec2f position)
 {
     createdEntities_.push_back({ entity, testedFrame_ });
 
-    Body bulletBody;
-    bulletBody.position = position;
-    bulletBody.velocity = velocity;
-    Box bulletBox;
-    bulletBox.extends = core::Vec2f::one() * bulletScale * 0.5f;
+    Body attackBody;
+    attackBody.position = position;
+    Box attackBox;
+    attackBox.extends = core::Vec2f::one() * AttackScale * 0.5f;
 
-    currentBulletManager_.AddComponent(entity);
-    currentBulletManager_.SetComponent(entity, { bulletPeriod, playerNumber });
+    currentAttackManager_.AddComponent(entity);
+    currentAttackManager_.SetComponent(entity, { attackPeriod, playerNumber });
 
     currentPhysicsManager_.AddBody(entity);
-    currentPhysicsManager_.SetBody(entity, bulletBody);
+    currentPhysicsManager_.SetBody(entity, attackBody);
     currentPhysicsManager_.AddBox(entity);
-    currentPhysicsManager_.SetBox(entity, bulletBox);
+    currentPhysicsManager_.SetBox(entity, attackBox);
 
     currentTransformManager_.AddComponent(entity);
     currentTransformManager_.SetPosition(entity, position);
-    currentTransformManager_.SetScale(entity, core::Vec2f::one() * bulletScale);
-    currentTransformManager_.SetRotation(entity, core::Degree(0.0f));
+    currentTransformManager_.SetScale(entity, core::Vec2f::one() * AttackScale);
 }
 
 void RollbackManager::DestroyEntity(core::Entity entity)

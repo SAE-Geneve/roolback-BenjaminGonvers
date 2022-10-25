@@ -33,6 +33,7 @@ struct PlayerCharacter
     float invincibilityTime = 0.0f;
     float actualJumpTime = 0.0f;
     float actualDashTime = 0.0f;
+    float actualAttackTime = 0.0f;
     float doubleClickTimeRight = timeToDoubleClick + 1.0f;
     float doubleClickTimeLeft = timeToDoubleClick + 1.0f;
     PlayerState playerState = PlayerState::IDLE;
@@ -120,10 +121,25 @@ private:
      * \param playerBody body of the player who can move
      */
     void Move(PlayerCharacter& playerCharacter, Body& playerBody);
-
-    //todo 
-	bool CanGoToAttack(PlayerCharacter& playerCharacter);
-    bool ResolveAttack(PlayerCharacter& playerCharacter,const Body& playerBody, const core::Entity playerEntity);
+	/**
+     * \brief check if the player got to attack state, if yes the state to attack and doing the init of the attack state, if no do nothing
+     * \param playerCharacter player who can attack
+     * \param playerBody body of the player who can attack
+     * \return true if a change state occurs, otherwise false
+     */
+    bool CanGoToAttack(PlayerCharacter& playerCharacter,const Body& playerBody);
+    /**
+     * \brief resolve the attack state, and tell if the state naturaly finish, if finish go to idle state.
+     * \param dt delta time
+     * \param playerCharacter player who is in attack state
+     * \param playerBody body of player who is in attack state
+     * \return true if a change state occurs, otherwise false
+     */
+    bool ResolveAttack(const sf::Time dt,PlayerCharacter& playerCharacter,Body& playerBody);
+    /**
+     * \brief resolve the idle state and lock the Y axis of the player.
+     * \param playerBody body of the player in idle state.
+     */
     void ResolveIdle(Body& playerBody);
 };
 }

@@ -23,10 +23,21 @@ void AttackManager::FixedUpdate(sf::Time dt)
         {
             continue;
         }
+
+        
         if (entityManager_.HasComponent(entity, static_cast<core::EntityMask>(ComponentType::PLAYER_ATTACK)))
         {
-        	gameManager_.DestroyAttackBox(entity);
+            Attack attack = GetComponent(entity);
+            if (attack.remainingTime <= 0)
+            {
+                gameManager_.DestroyAttackBox(entity);
+            }else
+            {
+                attack.remainingTime -= dt.asSeconds();
+                SetComponent(entity, attack);
+            }
         }
+        
     }
 }
 }

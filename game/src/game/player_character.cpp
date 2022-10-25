@@ -41,6 +41,8 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
                 break;
         	if(CanGoToMove(playerCharacter,playerBody))
 				break;
+        	if(CanGoToAttack(playerCharacter,playerBody))
+                break;
             break;
         case PlayerState::MOVE:
             if(ResolveMove(playerCharacter,playerBody))
@@ -49,6 +51,7 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
                 break;
             if(CanGoToJump(playerCharacter))
 				break;
+            
             break;
         case PlayerState::JUMP:
             if(ResolveJump(dt,playerCharacter,playerBody))
@@ -57,7 +60,8 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
                 break;
             break;
         case PlayerState::ATTACK:
-            //todo
+            if(ResolveAttack(dt,playerCharacter,playerBody))
+                break;
             break;
         case PlayerState::DASH:
             if(ResolveDash(dt, playerCharacter,playerBody))
@@ -79,39 +83,6 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
     	physicsManager_.SetBody(playerEntity, playerBody);
         SetComponent(playerEntity, playerCharacter);
 
-
-        //todo delete this
-        /*if (playerCharacter.invincibilityTime > 0.0f)
-        {
-            playerCharacter.invincibilityTime -= dt.asSeconds();
-            SetComponent(playerEntity, playerCharacter);
-        }
-        //Check if playerCharacter cannot shoot, and increase shootingTime
-        if (playerCharacter.shootingTime < playerShootingPeriod)
-        {
-            playerCharacter.shootingTime += dt.asSeconds();
-            SetComponent(playerEntity, playerCharacter);
-        }*/
-
-        //Shooting mechanism
-        /*
-        if (playerCharacter.shootingTime >= playerShootingPeriod)
-        {
-            if (input & PlayerInputEnum::PlayerInput::ATTACK)
-            {
-                const auto currentPlayerSpeed = playerBody.velocity.GetMagnitude();
-                const auto bulletVelocity = dir *
-                    ((core::Vec2f::Dot(playerBody.velocity, dir) > 0.0f ? currentPlayerSpeed : 0.0f)
-                        + bulletSpeed);
-                const auto bulletPosition = playerBody.position + dir * 0.5f + playerBody.velocity * dt.asSeconds();
-                gameManager_.SpawnBullet(playerCharacter.playerNumber,
-                    bulletPosition,
-                    bulletVelocity);
-                playerCharacter.shootingTime = 0.0f;
-                SetComponent(playerEntity, playerCharacter);
-            }
-        }
-        */
        
     }
 }
@@ -258,26 +229,37 @@ void PlayerCharacterManager::Move(PlayerCharacter& playerCharacter, Body& player
 }
 
 
-bool PlayerCharacterManager::CanGoToAttack(PlayerCharacter& playerCharacter)
+bool PlayerCharacterManager::CanGoToAttack(PlayerCharacter& playerCharacter, const Body& playerBody)
 {
 	if(playerCharacter.input & PlayerInputEnum::PlayerInput::ATTACK)
 	{
         playerCharacter.playerState = PlayerState::ATTACK;
+        const auto attackPosition = playerBody.position
+			+ core::Vec2f{ playerCharacter.playerFaceRight ? 0.5f : -0.5f,0.0f };
+        gameManager_.SpawnAttack(playerCharacter.playerNumber,
+            attackPosition);
+        playerCharacter.actualAttackTime = 0.0f;
         return true;
+        
 	}
     return false;
 }
 
-bool PlayerCharacterManager::ResolveAttack(PlayerCharacter& playerCharacter,const Body& playerBody,const core::Entity playerEntity)
+bool PlayerCharacterManager::ResolveAttack(const sf::Time dt,PlayerCharacter& playerCharacter,Body& playerBody)
 {
-    if (playerCharacter.input & PlayerInputEnum::PlayerInput::ATTACK)
+    Move(playerCharacter, playerBody);
+
+    if(playerCharacter.actualAttackTime < attackPeriod)
     {
-        const auto attackPosition = playerBody.position;
-        gameManager_.SpawnBullet(playerCharacter.playerNumber,//todo don't work
-            attackPosition, core::Vec2f::one());
-        playerCharacter.shootingTime = 0.0f;
-        SetComponent(playerEntity, playerCharacter);
+        playerCharacter.actualAttackTime += dt.asSeconds();
+    }else
+    {
+        if (CanGoToMove(playerCharacter, playerBody))
+            return true;
+        playerCharacter.playerState = PlayerState::IDLE;
+        return true;
     }
+    
 
 return false;
 }

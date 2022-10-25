@@ -65,15 +65,14 @@ void GameManager::Validate(Frame newValidateFrame)
     rollbackManager_.ValidateFrame(newValidateFrame);
 }
 
-core::Entity GameManager::SpawnBullet(PlayerNumber playerNumber, core::Vec2f position, core::Vec2f velocity)
+core::Entity GameManager::SpawnAttack(PlayerNumber playerNumber, core::Vec2f position)
 {
     const core::Entity entity = entityManager_.CreateEntity();
 
     transformManager_.AddComponent(entity);
     transformManager_.SetPosition(entity, position);
-    transformManager_.SetScale(entity, core::Vec2f::one() * bulletScale);
-    transformManager_.SetRotation(entity, core::Degree(0.0f));
-    rollbackManager_.SpawnBullet(playerNumber, entity, position, velocity);
+    transformManager_.SetScale(entity, core::Vec2f::one() * AttackScale);
+    rollbackManager_.SpawnAttack(playerNumber, entity, position);
     return entity;
 }
 
@@ -328,9 +327,9 @@ void ClientGameManager::SpawnPlayer(PlayerNumber playerNumber, core::Vec2f posit
 
 }
 
-core::Entity ClientGameManager::SpawnBullet(PlayerNumber playerNumber, core::Vec2f position, core::Vec2f velocity)
+core::Entity ClientGameManager::SpawnAttack(PlayerNumber playerNumber, core::Vec2f position)
 {
-    const auto entity = GameManager::SpawnBullet(playerNumber, position, velocity);
+    const auto entity = GameManager::SpawnAttack(playerNumber, position);
 
     spriteManager_.AddComponent(entity);
     spriteManager_.SetTexture(entity, bulletTexture_);
