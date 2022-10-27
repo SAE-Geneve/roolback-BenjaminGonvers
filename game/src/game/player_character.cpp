@@ -51,6 +51,8 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
                 break;
             if(CanGoToJump(playerCharacter))
 				break;
+            if (CanGoToAttack(playerCharacter, playerBody))
+                break;
         	break;
         case PlayerState::JUMP:
             if(ResolveJump(dt,playerCharacter,playerBody))
@@ -71,7 +73,8 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
                 break;
         	break;
         case PlayerState::SPAWN:
-            //todo
+            if(ResolveSpawn(playerCharacter,playerBody))
+                break;
             break;
         case PlayerState::INVALID_STATE:
             break;
@@ -328,6 +331,24 @@ bool PlayerCharacterManager::ResolveStun(const sf::Time dt, PlayerCharacter& pla
         InitIdle(playerCharacter);
         return true;
     }
+    return false;
+}
+
+bool PlayerCharacterManager::ResolveSpawn(PlayerCharacter& player_character, Body& playerBody)
+{
+    if (playerBody.position.x <= 0)
+    {
+        playerBody.position.x += respawnDistance;
+    }else
+    {
+        playerBody.position.x -= respawnDistance;
+    }
+
+    if (CanGoToMove(player_character, playerBody))
+        return true;
+	InitIdle(player_character);
+    return true;
+
     return false;
 }
 }

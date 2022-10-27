@@ -36,21 +36,22 @@ using Frame = std::uint32_t;
  */
 constexpr std::uint32_t maxPlayerNmb = 2;
 constexpr short playerHealth = 5;
-constexpr float playerSpeed = 1.0f;
-constexpr float playerJumpSpeed = 1.0f;
-constexpr float playerJumpFlyTime = 1.0f;
-constexpr float playerDashTime = 0.5f;
+constexpr float playerSpeed = 2.0f;
+constexpr float playerJumpSpeed = 3.0f;
+constexpr float playerJumpFlyTime = 0.4f;
+constexpr float playerDashTime = 0.2f;
 constexpr float playerDashSpeed = 10.0f;
 constexpr float playerStunLength = 2.0f;
 constexpr core::Degree playerAngularSpeed = core::Degree(90.0f);
 constexpr float playerShootingPeriod = 0.3f;
-constexpr float AttackScale = 0.1f;
-constexpr float attackPeriod = 3.0f;
+constexpr float attackScale = 0.2f;
+constexpr float attackPeriod = 0.75f;
 constexpr float playerInvincibilityPeriod = 1.5f;
 constexpr float invincibilityFlashPeriod = 0.5f;
 constexpr float groundLevel = -2.0f;
-constexpr float timeToDoubleClick = 0.5f;
+constexpr float timeToDoubleClick = 0.25f;
 constexpr core::Vec2f gravity{ 0.0f,-9.81f };
+constexpr float respawnDistance = 4.0f;
     
 
 /**

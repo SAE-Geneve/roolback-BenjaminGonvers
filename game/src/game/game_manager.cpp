@@ -71,7 +71,7 @@ core::Entity GameManager::SpawnAttack(PlayerNumber playerNumber, core::Vec2f pos
 
     transformManager_.AddComponent(entity);
     transformManager_.SetPosition(entity, position);
-    transformManager_.SetScale(entity, core::Vec2f::one() * AttackScale);
+    transformManager_.SetScale(entity, core::Vec2f::one() * attackScale);
     rollbackManager_.SpawnAttack(playerNumber, entity, position);
     return entity;
 }

@@ -146,5 +146,7 @@ private:
      */
     void ResolveIdle(Body& playerBody);
     bool ResolveStun(const sf::Time dt, PlayerCharacter& playerCharacter, Body& playerBody);
+    bool ResolveSpawn(PlayerCharacter& player_character, Body& playerBody);
+    
 };
 }

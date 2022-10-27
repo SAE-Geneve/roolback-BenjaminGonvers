@@ -422,7 +422,7 @@ void RollbackManager::SpawnAttack(PlayerNumber playerNumber, core::Entity entity
     Body attackBody;
     attackBody.position = position;
     Box attackBox;
-    attackBox.extends = core::Vec2f::one() * AttackScale * 0.5f;
+    attackBox.extends = core::Vec2f::one() * attackScale * 0.5f;
 
     currentAttackManager_.AddComponent(entity);
     currentAttackManager_.SetComponent(entity, { attackPeriod, playerNumber });
@@ -434,7 +434,7 @@ void RollbackManager::SpawnAttack(PlayerNumber playerNumber, core::Entity entity
 
     currentTransformManager_.AddComponent(entity);
     currentTransformManager_.SetPosition(entity, position);
-    currentTransformManager_.SetScale(entity, core::Vec2f::one() * AttackScale);
+    currentTransformManager_.SetScale(entity, core::Vec2f::one() * attackScale);
 }
 
 void RollbackManager::DestroyEntity(core::Entity entity)
