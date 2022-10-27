@@ -85,7 +85,7 @@ PlayerNumber GameManager::CheckWinner() const
 {
     int alivePlayer = 0;
     PlayerNumber winner = INVALID_PLAYER;
-    const auto& playerManager = rollbackManager_.GetPlayerCharacterManager();
+	const auto& playerManager = rollbackManager_.GetPlayerCharacterManager();
     for (core::Entity entity = 0; entity < entityManager_.GetEntitiesSize(); entity++)
     {
         if (!entityManager_.HasComponent(entity, static_cast<core::EntityMask>(ComponentType::PLAYER_CHARACTER)))
@@ -109,7 +109,8 @@ void GameManager::WinGame(PlayerNumber winner)
 ClientGameManager::ClientGameManager(PacketSenderInterface& packetSenderInterface) :
     GameManager(),
     packetSenderInterface_(packetSenderInterface),
-    spriteManager_(entityManager_, transformManager_)
+    spriteManager_(entityManager_, transformManager_),
+    animationManager_(entityManager_,spriteManager_,*this)
 {
 }
 
@@ -154,7 +155,7 @@ void ClientGameManager::Update(sf::Time dt)
                 static_cast<core::EntityMask>(core::ComponentType::SPRITE)))
             {
                 const auto& player = rollbackManager_.GetPlayerCharacterManager().GetComponent(entity);
-                
+                animationManager_.UpdateAnimation(dt, entity);
             }
 
             if (entityManager_.HasComponent(entity, static_cast<core::EntityMask>(core::ComponentType::TRANSFORM)))
@@ -399,6 +400,16 @@ void ClientGameManager::StartGame(unsigned long long int startingTime)
 {
     core::LogDebug(fmt::format("Start game at starting time: {}", startingTime));
     startingTime_ = startingTime;
+
+
+    const auto entityPlayer1 = GetEntityFromPlayerNumber(0);
+	animationManager_.AddComponent(entityPlayer1);
+    animationManager_.SetComponent(entityPlayer1, AnimationData{});
+
+    const auto entityPlayer2 = GetEntityFromPlayerNumber(1);
+    animationManager_.AddComponent(entityPlayer2);
+    animationManager_.SetComponent(entityPlayer2, AnimationData{});
+
 }
 
 void ClientGameManager::DrawImGui()

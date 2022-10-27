@@ -52,6 +52,7 @@ constexpr float groundLevel = -2.0f;
 constexpr float timeToDoubleClick = 0.25f;
 constexpr core::Vec2f gravity{ 0.0f,-9.81f };
 constexpr float respawnDistance = 4.0f;
+constexpr float animationPeriod = 1.0f;
     
 
 /**
@@ -76,9 +77,9 @@ constexpr float fixedPeriod = 0.02f; //50fps
 constexpr std::array<core::Color, std::max(4u, maxPlayerNmb)> playerColors
 {
     core::Color::red(),
-    core::Color::blue(),
+    core::Color::cyan(),
     core::Color::yellow(),
-    core::Color::cyan()
+    core::Color::green()
 };
 
 constexpr std::array<core::Vec2f, std::max(4u, maxPlayerNmb)> spawnPositions
@@ -104,7 +105,7 @@ enum class ComponentType : core::EntityMask
     PLATFORM = static_cast<core::EntityMask>(core::ComponentType::OTHER_TYPE) << 2u,
     PLAYER_INPUT = static_cast<core::EntityMask>(core::ComponentType::OTHER_TYPE) << 3u,
     DESTROYED = static_cast<core::EntityMask>(core::ComponentType::OTHER_TYPE) << 4u,
-    PLAYER_DASH = static_cast<core::EntityMask>(core::ComponentType::OTHER_TYPE) << 5u,
+    ANIMATION_DATA = static_cast<core::EntityMask>(core::ComponentType::OTHER_TYPE) << 5u,
 };
 
 /**

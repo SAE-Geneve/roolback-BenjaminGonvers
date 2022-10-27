@@ -31,6 +31,7 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
 
         DoubleClickTimeUpdate(dt, playerCharacter);
 
+        
         switch (playerCharacter.playerState)
         {
         case PlayerState::IDLE:

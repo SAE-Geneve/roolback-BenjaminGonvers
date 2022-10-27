@@ -34,6 +34,7 @@ struct PlayerCharacter
     float doubleClickTimeRight = timeToDoubleClick + 1.0f;
     float doubleClickTimeLeft = timeToDoubleClick + 1.0f;
     PlayerState playerState = PlayerState::IDLE;
+    
     /*
      *The continuous boolean var is for have the upward front this is use for double clicking
     */

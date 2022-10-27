@@ -6,6 +6,7 @@
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Graphics/Text.hpp>
 
+#include "animation_manager.h"
 #include "game_globals.h"
 #include "rollback_manager.h"
 #include "star_background.h"
@@ -89,6 +90,7 @@ public:
     [[nodiscard]] PlayerNumber GetPlayerNumber() const { return clientPlayer_; }
     void WinGame(PlayerNumber winner) override;
     [[nodiscard]] std::uint32_t GetState() const { return state_; }
+    [[nodiscard]] const AnimationManager& GetAnimationManager() const { return animationManager_; }
 protected:
 
     void UpdateCameraView();
@@ -99,6 +101,7 @@ protected:
     sf::View cameraView_;
     PlayerNumber clientPlayer_ = INVALID_PLAYER;
     core::SpriteManager spriteManager_;
+    AnimationManager animationManager_;
     StarBackground starBackground_;
     float fixedTimer_ = 0.0f;
     unsigned long long startingTime_ = 0;
