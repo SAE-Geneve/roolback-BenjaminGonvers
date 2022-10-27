@@ -88,7 +88,6 @@ void RollbackManager::SimulateToCurrentFrame()
             continue;
         const auto& body = currentPhysicsManager_.GetBody(entity);
         currentTransformManager_.SetPosition(entity, body.position);
-        currentTransformManager_.SetRotation(entity, body.rotation);
     }
 }
 void RollbackManager::SetPlayerInput(PlayerNumber playerNumber, PlayerInput playerInput, Frame inputFrame)
@@ -268,8 +267,7 @@ PhysicsState RollbackManager::GetValidatePhysicsState(PlayerNumber playerNumber)
     for (size_t i = 0; i < sizeof(float) / sizeof(PhysicsState); i++)
     {
         state += angularVelPtr[i];
-    }
-    return state;
+    }    return state;
 }
 
 void RollbackManager::SpawnPlayer(PlayerNumber playerNumber, core::Entity entity, core::Vec2f position)
@@ -315,132 +313,80 @@ PlayerInput RollbackManager::GetInputAtFrame(PlayerNumber playerNumber, Frame fr
 
 void RollbackManager::OnTrigger(core::Entity entity1, core::Entity entity2)
 {
+   
 
-
-    const std::function<void(const PlayerCharacter&, core::Entity, const Attack&, core::Entity)> ManageCollision =
+    const std::function<void(const PlayerCharacter&, core::Entity, const Attack&, core::Entity)> ManageCollisionAttack =
         [this](const auto& player, auto playerEntity, const auto& attack, auto attackEntity)
     {
-        if (player.playerNumber != attack.playerNumber)
+        if (player.playerNumber != attack.playerNumber && player.playerState != PlayerState::DASH)
         {
             gameManager_.DestroyAttackBox(attackEntity);
             //lower health point
             auto playerCharacter = currentPlayerManager_.GetComponent(playerEntity);
-            if (playerCharacter.invincibilityTime <= 0.0f)
-            {
-                core::LogDebug(fmt::format("Player {} is hit by attack", playerCharacter.playerNumber));
-                playerCharacter.playerState = game::PlayerState::SPAWN;
-                playerCharacter.invincibilityTime = playerInvincibilityPeriod;
-            }
+            auto playerBody = currentPhysicsManager_.GetBody(playerEntity);
+            
+        	core::LogDebug(fmt::format("Player {} is hit by attack", playerCharacter.playerNumber));
+            currentPlayerManager_.InitSpawn(playerCharacter, playerBody);
+
+            -- playerCharacter.health;
+            
             currentPlayerManager_.SetComponent(playerEntity, playerCharacter);
+            currentPhysicsManager_.SetBody(playerEntity, playerBody);
         }
     };
 
     const auto ManageCollisionPlayer =
         [this](PlayerCharacter& firstPlayer, core::Entity firstPlayerEntity, PlayerCharacter& secondPlayer, core::Entity secondPlayerEntity)
     {
-        if (firstPlayer.playerNumber != secondPlayer.playerNumber &&
-            !(firstPlayer.playerState == PlayerState::ATTACK || secondPlayer.playerState == PlayerState::ATTACK))
-        {
-            auto firstPlayerBody = currentPhysicsManager_.GetBody(firstPlayerEntity);
-            const auto firstPlayerBox = currentPhysicsManager_.GetBox(firstPlayerEntity);
-
-            auto secondPlayerBody = currentPhysicsManager_.GetBody(secondPlayerEntity);
-            const auto secondPlayerBox = currentPhysicsManager_.GetBox(secondPlayerEntity);
-
-            const float firstPlayerMaxY = firstPlayerBody.position.y + firstPlayerBox.extends.y;
-            const float firstPlayerMinY = firstPlayerBody.position.y - firstPlayerBox.extends.y;
-
-            const float secondPlayerMaxY = secondPlayerBody.position.y + secondPlayerBox.extends.y;
-            const float secondPlayerMinY = secondPlayerBody.position.y - secondPlayerBox.extends.y;
-
-        	const float overlapY = std::min(firstPlayerMaxY - secondPlayerMinY, secondPlayerMaxY - firstPlayerMinY);
-            
-            const float firstPlayerMaxX = firstPlayerBody.position.x + firstPlayerBox.extends.x;
-            const float firstPlayerMinX = firstPlayerBody.position.x - firstPlayerBox.extends.x;
-
-            const float secondPlayerMaxX = secondPlayerBody.position.x + secondPlayerBox.extends.x;
-            const float secondPlayerMinX = secondPlayerBody.position.x - secondPlayerBox.extends.x;
-
-            const float overlapX = std::min(firstPlayerMaxX - secondPlayerMinX, secondPlayerMaxX - firstPlayerMinX);
-
-            const float overlap = std::min(overlapY, overlapX);
-
-            if(overlap == overlapY)
+        if (firstPlayer.playerState != PlayerState::SPAWN && secondPlayer.playerState != PlayerState::SPAWN) {
+            if (firstPlayer.playerNumber != secondPlayer.playerNumber &&
+                !(firstPlayer.playerState == PlayerState::ATTACK && secondPlayer.playerState == PlayerState::DASH ||
+                    firstPlayer.playerState == PlayerState::DASH && secondPlayer.playerState == PlayerState::ATTACK))
             {
-	            if (overlap == firstPlayerMaxY - secondPlayerMinY)
-	            {
-                    firstPlayerBody.position.y -= overlap/2;
-                    secondPlayerBody.position.y += overlap/2;
-                    
-                    if (firstPlayerBody.velocity.y > 0.0f)
-                    {
-                        firstPlayerBody.velocity.y = 0;
-                    }
-                    if (secondPlayerBody.velocity.y < 0.0f)
-                    {
-                        secondPlayerBody.velocity.y = 0;
-                    }
-                }
-                else {
-                    firstPlayerBody.position.y += overlap/2;
-                    secondPlayerBody.position.y -= overlap/2;
+                auto firstPlayerBody = currentPhysicsManager_.GetBody(firstPlayerEntity);
+                const auto firstPlayerBox = currentPhysicsManager_.GetBox(firstPlayerEntity);
 
-                    if (firstPlayerBody.velocity.y < 0.0f)
-                    {
-                        firstPlayerBody.velocity.y = 0;
-                    }
-                    if (secondPlayerBody.velocity.y > 0.0f)
-                    {
-                        secondPlayerBody.velocity.y = 0;
-                    }
-                }
+                auto secondPlayerBody = currentPhysicsManager_.GetBody(secondPlayerEntity);
+                const auto secondPlayerBox = currentPhysicsManager_.GetBox(secondPlayerEntity);
 
-                
-            }else
-            {
-	            if (overlap == firstPlayerMaxX - secondPlayerMinX)
-	            {
-                    firstPlayerBody.position.x -= overlap/2;
-                    secondPlayerBody.position.x += overlap/2;
-                    
-                    if (firstPlayerBody.velocity.x > 0.0f)
-                    {
-                        firstPlayerBody.velocity.x = 0;
-                    }
-                    if (secondPlayerBody.velocity.x < 0.0f)
-                    {
-                        secondPlayerBody.velocity.x = 0;
-                    }
-                }
-                else {
-                    firstPlayerBody.position.x += overlap/2;
-                    secondPlayerBody.position.x -= overlap/2;
+                ResolveCollisionBoxToBox(firstPlayerBody, firstPlayerBox, secondPlayerBody, secondPlayerBox);
 
-                    if (firstPlayerBody.velocity.x < 0.0f)
-                    {
-                        firstPlayerBody.velocity.x = 0;
-                    }
-                    if (secondPlayerBody.velocity.x > 0.0f)
-                    {
-                        secondPlayerBody.velocity.x = 0;
-                    }
+                currentPhysicsManager_.SetBody(firstPlayerEntity, firstPlayerBody);
+                currentPhysicsManager_.SetBody(secondPlayerEntity, secondPlayerBody);
+
+                if (firstPlayer.playerState == PlayerState::DASH)
+                {
+                    PlayerCharacterManager::InitStun(firstPlayer, firstPlayerBody);
+                }
+                if (secondPlayer.playerState == PlayerState::DASH)
+                {
+                    PlayerCharacterManager::InitStun(secondPlayer, secondPlayerBody);
                 }
             }
-            currentPhysicsManager_.SetBody(firstPlayerEntity, firstPlayerBody);
-            currentPhysicsManager_.SetBody(secondPlayerEntity, secondPlayerBody);
+            else
+            {
+                PlayerCharacter attackPlayer;
+                core::Entity attackPlayerEntity;
 
-            if(firstPlayer.playerState == PlayerState::DASH)
-            {
-                firstPlayer.playerState = PlayerState::STUN;
+                if (firstPlayer.playerState == PlayerState::ATTACK)
+                {
+                    attackPlayer = firstPlayer;
+                    attackPlayerEntity = firstPlayerEntity;
+                }
+                else
+                {
+                    attackPlayer = secondPlayer;
+                    attackPlayerEntity = secondPlayerEntity;
+                }
+
+                auto attackPlayerBody = currentPhysicsManager_.GetBody(attackPlayerEntity);
+                currentPlayerManager_.InitSpawn(attackPlayer,attackPlayerBody);
+
+                --attackPlayer.health;
+
+                currentPlayerManager_.SetComponent(attackPlayerEntity, attackPlayer);
+                currentPhysicsManager_.SetBody(attackPlayerEntity, attackPlayerBody);
             }
-            if(secondPlayer.playerState == PlayerState::DASH)
-            {
-                secondPlayer.playerState = PlayerState::STUN;
-            }
-        }
-        else 
-        {
-         //todo attack variant
         }
     };
 
@@ -449,7 +395,7 @@ void RollbackManager::OnTrigger(core::Entity entity1, core::Entity entity2)
     {
         const auto& player = currentPlayerManager_.GetComponent(entity1);
         const auto& attack = currentAttackManager_.GetComponent(entity2);
-        ManageCollision(player, entity1, attack, entity2);
+        ManageCollisionAttack(player, entity1, attack, entity2);
 
     }
     if (entityManager_.HasComponent(entity2, static_cast<core::EntityMask>(ComponentType::PLAYER_CHARACTER)) &&
@@ -457,14 +403,14 @@ void RollbackManager::OnTrigger(core::Entity entity1, core::Entity entity2)
     {
         const auto& player = currentPlayerManager_.GetComponent(entity2);
         const auto& attack = currentAttackManager_.GetComponent(entity1);
-        ManageCollision(player, entity2, attack, entity1);
+        ManageCollisionAttack(player, entity2, attack, entity1);
     }
 
     if (entityManager_.HasComponent(entity1, static_cast<core::EntityMask>(ComponentType::PLAYER_CHARACTER)) &&
         entityManager_.HasComponent(entity2, static_cast<core::EntityMask>(ComponentType::PLAYER_CHARACTER)))
     {
-        auto& firstPlayer = currentPlayerManager_.GetComponent(entity2);
-        auto& secondPlayer = currentPlayerManager_.GetComponent(entity1);
+        auto& firstPlayer = currentPlayerManager_.GetComponent(entity1);
+        auto& secondPlayer = currentPlayerManager_.GetComponent(entity2);
         ManageCollisionPlayer(firstPlayer, entity1, secondPlayer, entity2);
     }
 }
@@ -507,5 +453,89 @@ void RollbackManager::DestroyEntity(core::Entity entity)
         return;
     }
         entityManager_.AddComponent(entity, static_cast<core::EntityMask>(ComponentType::DESTROYED));
+}
+
+void RollbackManager::ResolveCollisionBoxToBox(Body& firstPlayerBody,const Box& firstPlayerBox,Body& secondPlayerBody,const Box& secondPlayerBox)
+{
+    const float firstPlayerMaxY = firstPlayerBody.position.y + firstPlayerBox.extends.y;
+    const float firstPlayerMinY = firstPlayerBody.position.y - firstPlayerBox.extends.y;
+
+    const float secondPlayerMaxY = secondPlayerBody.position.y + secondPlayerBox.extends.y;
+    const float secondPlayerMinY = secondPlayerBody.position.y - secondPlayerBox.extends.y;
+
+    const float overlapY = std::min(firstPlayerMaxY - secondPlayerMinY, secondPlayerMaxY - firstPlayerMinY);
+
+    const float firstPlayerMaxX = firstPlayerBody.position.x + firstPlayerBox.extends.x;
+    const float firstPlayerMinX = firstPlayerBody.position.x - firstPlayerBox.extends.x;
+
+    const float secondPlayerMaxX = secondPlayerBody.position.x + secondPlayerBox.extends.x;
+    const float secondPlayerMinX = secondPlayerBody.position.x - secondPlayerBox.extends.x;
+
+    const float overlapX = std::min(firstPlayerMaxX - secondPlayerMinX, secondPlayerMaxX - firstPlayerMinX);
+
+    const float overlap = std::min(overlapY, overlapX);
+
+    if (overlap == overlapY)
+    {
+        if (overlap == firstPlayerMaxY - secondPlayerMinY)
+        {
+            firstPlayerBody.position.y -= overlap / 2;
+            secondPlayerBody.position.y += overlap / 2;
+
+            if (firstPlayerBody.velocity.y > 0.0f)
+            {
+                firstPlayerBody.velocity.y = 0;
+            }
+            if (secondPlayerBody.velocity.y < 0.0f)
+            {
+                secondPlayerBody.velocity.y = 0;
+            }
+        }
+        else {
+            firstPlayerBody.position.y += overlap / 2;
+            secondPlayerBody.position.y -= overlap / 2;
+
+            if (firstPlayerBody.velocity.y < 0.0f)
+            {
+                firstPlayerBody.velocity.y = 0;
+            }
+            if (secondPlayerBody.velocity.y > 0.0f)
+            {
+                secondPlayerBody.velocity.y = 0;
+            }
+        }
+
+
+    }
+    else
+    {
+        if (overlap == firstPlayerMaxX - secondPlayerMinX)
+        {
+            firstPlayerBody.position.x -= overlap / 2;
+            secondPlayerBody.position.x += overlap / 2;
+
+            if (firstPlayerBody.velocity.x > 0.0f)
+            {
+                firstPlayerBody.velocity.x = 0;
+            }
+            if (secondPlayerBody.velocity.x < 0.0f)
+            {
+                secondPlayerBody.velocity.x = 0;
+            }
+        }
+        else {
+            firstPlayerBody.position.x += overlap / 2;
+            secondPlayerBody.position.x -= overlap / 2;
+
+            if (firstPlayerBody.velocity.x < 0.0f)
+            {
+                firstPlayerBody.velocity.x = 0;
+            }
+            if (secondPlayerBody.velocity.x > 0.0f)
+            {
+                secondPlayerBody.velocity.x = 0;
+            }
+        }
+    }
 }
 }

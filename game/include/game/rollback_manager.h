@@ -120,5 +120,7 @@ private:
      * to destroy them when rollbacking.
      */
     std::vector<CreatedEntity> createdEntities_;
+
+    void ResolveCollisionBoxToBox(Body& firstPlayerBody,const Box& firstPlayerBox, Body& secondPlayerBody,const Box& secondPlayerBox);
 };
 }

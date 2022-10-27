@@ -41,6 +41,7 @@ constexpr float playerJumpSpeed = 1.0f;
 constexpr float playerJumpFlyTime = 1.0f;
 constexpr float playerDashTime = 0.5f;
 constexpr float playerDashSpeed = 10.0f;
+constexpr float playerStunLength = 2.0f;
 constexpr core::Degree playerAngularSpeed = core::Degree(90.0f);
 constexpr float playerShootingPeriod = 0.3f;
 constexpr float AttackScale = 0.1f;

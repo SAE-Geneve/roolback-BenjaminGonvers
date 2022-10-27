@@ -51,8 +51,7 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
                 break;
             if(CanGoToJump(playerCharacter))
 				break;
-            
-            break;
+        	break;
         case PlayerState::JUMP:
             if(ResolveJump(dt,playerCharacter,playerBody))
 				break;
@@ -68,8 +67,9 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
                 break;
             break;
         case PlayerState::STUN:
-            //todo
-            break;
+            if(ResolveStun(dt,playerCharacter,playerBody))
+                break;
+        	break;
         case PlayerState::SPAWN:
             //todo
             break;
@@ -86,6 +86,61 @@ void PlayerCharacterManager::FixedUpdate(sf::Time dt)
        
     }
 }
+
+void PlayerCharacterManager::InitIdle(PlayerCharacter& playerCharacter)
+{
+    playerCharacter.playerState = PlayerState::IDLE;
+}
+
+void PlayerCharacterManager::InitMove(PlayerCharacter& playerCharacter, Body& playerBody)
+{
+    Move(playerCharacter, playerBody);
+
+    playerCharacter.playerState = PlayerState::MOVE;
+}
+
+void PlayerCharacterManager::InitJump(PlayerCharacter& playerCharacter)
+{
+    playerCharacter.actualStateTime = 0.0f;
+
+    playerCharacter.playerState = PlayerState::JUMP;
+}
+
+void PlayerCharacterManager::InitAttack(PlayerCharacter& playerCharacter,const Body& playerBody, PlayerCharacterManager& playerManager)
+{
+    playerCharacter.playerState = PlayerState::ATTACK;
+    const auto attackPosition = playerBody.position
+        + core::Vec2f{ playerCharacter.playerFaceRight ? 0.5f : -0.5f,0.0f };
+    playerManager.gameManager_.SpawnAttack(playerCharacter.playerNumber,
+        attackPosition);
+    playerCharacter.actualStateTime = 0.0f;
+}
+
+void PlayerCharacterManager::InitDash(PlayerCharacter& playerCharacter, Body& playerBody)
+{
+    playerCharacter.playerState = PlayerState::DASH;
+    playerBody.velocity = core::Vec2f(
+        playerDashSpeed * ((playerCharacter.input & PlayerInputEnum::PlayerInput::LEFT ? -1.0f : 0.0f)
+            + (playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT ? 1.0f : 0.0f)),
+        0.0f);
+    playerCharacter.actualStateTime = 0.0f;
+}
+
+void PlayerCharacterManager::InitStun(PlayerCharacter& playerCharacter, Body& playerBody)
+{
+    playerCharacter.playerState = PlayerState::STUN;
+    playerBody.velocity = core::Vec2f::zero();
+    playerCharacter.actualStateTime = 0.0f;
+}
+
+void PlayerCharacterManager::InitSpawn(PlayerCharacter& playerCharacter,Body& playerBody)
+{
+    playerCharacter.playerState = PlayerState::SPAWN;
+    playerCharacter.actualStateTime = 0.0f;
+    playerBody.velocity = core::Vec2f::zero();
+
+}
+
 
 void PlayerCharacterManager::DoubleClickTimeUpdate(const sf::Time dt,PlayerCharacter &playerCharacter)
 {
@@ -132,9 +187,7 @@ bool PlayerCharacterManager::CanGoToDash(PlayerCharacter& playerCharacter,Body& 
     if (playerCharacter.input & PlayerInputEnum::PlayerInput::LEFT && !playerCharacter.oldLeftClick && playerCharacter.doubleClickTimeLeft <= timeToDoubleClick
         || playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT && !playerCharacter.oldRightClick && playerCharacter.doubleClickTimeRight <= timeToDoubleClick)
     {
-        playerCharacter.playerState = PlayerState::DASH;
-        playerBody.velocity = core::Vec2f( playerDashSpeed* ((playerCharacter.input & PlayerInputEnum::PlayerInput::LEFT ? -1.0f : 0.0f) + (playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT ? 1.0f : 0.0f)),0.0f);
-        playerCharacter.actualDashTime = 0.0f;
+        InitDash(playerCharacter, playerBody);
         return true;
     }
     return false;
@@ -142,12 +195,12 @@ bool PlayerCharacterManager::CanGoToDash(PlayerCharacter& playerCharacter,Body& 
 
 bool PlayerCharacterManager::ResolveDash(const sf::Time dt, PlayerCharacter& playerCharacter,Body& playerBody)
 {
-    playerCharacter.actualDashTime += dt.asSeconds();
-    if (playerCharacter.actualDashTime >= playerDashTime)
+    playerCharacter.actualStateTime += dt.asSeconds();
+    if (playerCharacter.actualStateTime >= playerDashTime)
     {
         if (CanGoToMove(playerCharacter, playerBody))
             return true;
-        playerCharacter.playerState = PlayerState::IDLE;
+        InitIdle(playerCharacter);
         return true;
     }
     return false;
@@ -157,9 +210,7 @@ bool PlayerCharacterManager::CanGoToJump(PlayerCharacter& playerCharacter)
 {
     if (playerCharacter.input & PlayerInputEnum::PlayerInput::UP)
     {
-        playerCharacter.actualJumpTime = 0.0f;
-        
-        playerCharacter.playerState = PlayerState::JUMP;
+        InitJump(playerCharacter);
         return true;
     }
     return false;
@@ -167,20 +218,20 @@ bool PlayerCharacterManager::CanGoToJump(PlayerCharacter& playerCharacter)
 
 bool PlayerCharacterManager::ResolveJump(const sf::Time dt, PlayerCharacter& playerCharacter, Body& playerBody)
 {
-    playerCharacter.actualJumpTime += dt.asSeconds();
+    playerCharacter.actualStateTime += dt.asSeconds();
 
     Move(playerCharacter,playerBody);
 
-    if (playerCharacter.actualJumpTime <= playerJumpFlyTime)
+    if (playerCharacter.actualStateTime <= playerJumpFlyTime)
     {
         playerBody.velocity.y = playerJumpSpeed - gravity.y * dt.asSeconds();
     }
 
-    if (playerCharacter.actualJumpTime >= playerJumpFlyTime && playerBody.position.y <= groundLevel)
+    if (playerCharacter.actualStateTime >= playerJumpFlyTime && playerBody.position.y <= groundLevel)
     {
         if (CanGoToMove(playerCharacter, playerBody))
             return true;
-        playerCharacter.playerState = PlayerState::IDLE;
+        InitIdle(playerCharacter);
         return true;
     }
     return  false;
@@ -188,11 +239,10 @@ bool PlayerCharacterManager::ResolveJump(const sf::Time dt, PlayerCharacter& pla
 
 bool PlayerCharacterManager::CanGoToMove(PlayerCharacter& playerCharacter,Body& playerBody)
 {
-    Move(playerCharacter, playerBody);
-
-	if (playerBody.velocity.x != 0.0f)
+	if (playerCharacter.input & PlayerInputEnum::PlayerInput::LEFT ||
+        playerCharacter.input & PlayerInputEnum::PlayerInput::RIGHT )
 	{
-            playerCharacter.playerState = PlayerState::MOVE;
+			InitMove(playerCharacter,playerBody);
             return true;
 	}
     return false;
@@ -205,7 +255,7 @@ bool PlayerCharacterManager::ResolveMove(PlayerCharacter& playerCharacter, Body&
 
 	if (playerBody.velocity.x == 0.0f)
     {
-        playerCharacter.playerState = PlayerState::IDLE;
+        InitIdle(playerCharacter);
         return true;
     }
     return false;
@@ -233,14 +283,8 @@ bool PlayerCharacterManager::CanGoToAttack(PlayerCharacter& playerCharacter, con
 {
 	if(playerCharacter.input & PlayerInputEnum::PlayerInput::ATTACK)
 	{
-        playerCharacter.playerState = PlayerState::ATTACK;
-        const auto attackPosition = playerBody.position
-			+ core::Vec2f{ playerCharacter.playerFaceRight ? 0.5f : -0.5f,0.0f };
-        gameManager_.SpawnAttack(playerCharacter.playerNumber,
-            attackPosition);
-        playerCharacter.actualAttackTime = 0.0f;
+        InitAttack(playerCharacter, playerBody, *this);
         return true;
-        
 	}
     return false;
 }
@@ -249,14 +293,14 @@ bool PlayerCharacterManager::ResolveAttack(const sf::Time dt,PlayerCharacter& pl
 {
     Move(playerCharacter, playerBody);
 
-    if(playerCharacter.actualAttackTime < attackPeriod)
+    if(playerCharacter.actualStateTime < attackPeriod)
     {
-        playerCharacter.actualAttackTime += dt.asSeconds();
+        playerCharacter.actualStateTime += dt.asSeconds();
     }else
     {
         if (CanGoToMove(playerCharacter, playerBody))
             return true;
-        playerCharacter.playerState = PlayerState::IDLE;
+        InitIdle(playerCharacter);
         return true;
     }
     
@@ -267,6 +311,24 @@ return false;
 void PlayerCharacterManager::ResolveIdle(Body& playerBody)
 {
     playerBody.velocity = core::Vec2f{0.0f,playerBody.velocity.y};
+}
+
+bool PlayerCharacterManager::ResolveStun(const sf::Time dt, PlayerCharacter& playerCharacter,Body& playerBody)
+{
+    playerBody.velocity = core::Vec2f{ 0.0f,playerBody.velocity.y };
+    
+    if(playerCharacter.actualStateTime < playerStunLength)
+    {
+        playerCharacter.actualStateTime += dt.asSeconds();
+
+    }else
+    {
+        if (CanGoToMove(playerCharacter, playerBody))
+            return true;
+        InitIdle(playerCharacter);
+        return true;
+    }
+    return false;
 }
 }
 

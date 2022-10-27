@@ -134,6 +134,7 @@ void ClientGameManager::Begin()
     }
     textRenderer_.setFont(font_);
     starBackground_.Init();
+
 }
 
 void ClientGameManager::Update(sf::Time dt)
@@ -153,23 +154,7 @@ void ClientGameManager::Update(sf::Time dt)
                 static_cast<core::EntityMask>(core::ComponentType::SPRITE)))
             {
                 const auto& player = rollbackManager_.GetPlayerCharacterManager().GetComponent(entity);
-                /* //todo
-                if (player.invincibilityTime > 0.0f)
-                {
-                    //auto leftV = std::fmod(player.invincibilityTime, invincibilityFlashPeriod);
-                    //auto rightV = invincibilityFlashPeriod / 2.0f;
-                    //core::LogDebug(fmt::format("Comparing {} and {} with time: {}", leftV, rightV, player.invincibilityTime));
-                }
-                */
-                if (player.invincibilityTime > 0.0f &&
-                    std::fmod(player.invincibilityTime, invincibilityFlashPeriod) > invincibilityFlashPeriod / 2.0f)
-                {
-                    spriteManager_.SetColor(entity, sf::Color::Black);
-                }
-                else
-                {
-                    spriteManager_.SetColor(entity, playerColors[player.playerNumber]);
-                }
+                
             }
 
             if (entityManager_.HasComponent(entity, static_cast<core::EntityMask>(core::ComponentType::TRANSFORM)))

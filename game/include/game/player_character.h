@@ -30,10 +30,7 @@ struct PlayerCharacter
     PlayerInput input = 0u;
     PlayerNumber playerNumber = INVALID_PLAYER;
     short health = playerHealth;
-    float invincibilityTime = 0.0f;
-    float actualJumpTime = 0.0f;
-    float actualDashTime = 0.0f;
-    float actualAttackTime = 0.0f;
+    float actualStateTime = 0.0f;
     float doubleClickTimeRight = timeToDoubleClick + 1.0f;
     float doubleClickTimeLeft = timeToDoubleClick + 1.0f;
     PlayerState playerState = PlayerState::IDLE;
@@ -55,6 +52,13 @@ public:
     explicit PlayerCharacterManager(core::EntityManager& entityManager, PhysicsManager& physicsManager, GameManager& gameManager);
     void FixedUpdate(sf::Time dt);
 
+	static void InitIdle(PlayerCharacter& playerCharacter);
+    static void InitMove(PlayerCharacter& playerCharacter,Body& playerBody);
+    static void InitJump(PlayerCharacter& playerCharacter);
+    static void InitAttack(PlayerCharacter& playerCharacter,const Body& playerBody, PlayerCharacterManager& playerManager);
+    static void InitDash(PlayerCharacter& playerCharacter, Body& playerBody);
+    static void InitStun(PlayerCharacter& playerCharacter, Body& playerBody);
+    static void InitSpawn(PlayerCharacter& playerCharacter,Body& playerBody);
 
 
 private:
@@ -120,7 +124,7 @@ private:
      * \param playerCharacter player who can move
      * \param playerBody body of the player who can move
      */
-    void Move(PlayerCharacter& playerCharacter, Body& playerBody);
+    static void Move(PlayerCharacter& playerCharacter, Body& playerBody);
 	/**
      * \brief check if the player got to attack state, if yes the state to attack and doing the init of the attack state, if no do nothing
      * \param playerCharacter player who can attack
@@ -141,5 +145,6 @@ private:
      * \param playerBody body of the player in idle state.
      */
     void ResolveIdle(Body& playerBody);
+    bool ResolveStun(const sf::Time dt, PlayerCharacter& playerCharacter, Body& playerBody);
 };
 }
