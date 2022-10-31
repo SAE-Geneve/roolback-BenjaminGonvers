@@ -54,6 +54,8 @@ namespace game
 
 		core::SpriteManager& spriteManager_;
 		GameManager& gameManager_;
+
+		bool isInit = false;
 	};
 	
 }

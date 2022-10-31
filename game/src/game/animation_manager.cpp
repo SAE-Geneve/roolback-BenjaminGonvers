@@ -38,6 +38,20 @@ namespace game
 	}
 	void AnimationManager::UpdateAnimation(const sf::Time dt,const core::Entity& entity)
 	{
+
+		if(!isInit)
+		{
+			const auto entityPlayer1 = gameManager_.GetEntityFromPlayerNumber(0);
+			AddComponent(entityPlayer1);
+			SetComponent(entityPlayer1, AnimationData{});
+
+			const auto entityPlayer2 = gameManager_.GetEntityFromPlayerNumber(1);
+			AddComponent(entityPlayer2);
+			SetComponent(entityPlayer2, AnimationData{});
+
+			isInit = true;
+		}
+
 		AnimationData& actualAnimationData = GetComponent(entity);
 		
 		actualAnimationData.time += dt.asSeconds();
@@ -48,6 +62,23 @@ namespace game
 		{
 			actualAnimationData.textureIdx = 0;
 		}
+
+		
+
+		
+		
+		auto& playerSprite = spriteManager_.GetComponent(entity);
+
+		if(playerCharacter.playerFaceRight)
+		{
+			playerSprite.setScale(1.0f, 1.0f);
+
+		}else
+		{
+			playerSprite.setScale(-1.0f, 1.0f);
+		}
+
+		spriteManager_.SetComponent(entity, playerSprite);
 
 		switch (playerCharacter.playerState)
 		{

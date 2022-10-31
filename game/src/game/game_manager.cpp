@@ -155,15 +155,38 @@ void ClientGameManager::Update(sf::Time dt)
                 static_cast<core::EntityMask>(core::ComponentType::SPRITE)))
             {
                 const auto& player = rollbackManager_.GetPlayerCharacterManager().GetComponent(entity);
-                animationManager_.UpdateAnimation(dt, entity);
+
+
+            	animationManager_.UpdateAnimation(dt, entity);
+                
             }
+
 
             if (entityManager_.HasComponent(entity, static_cast<core::EntityMask>(core::ComponentType::TRANSFORM)))
             {
                 transformManager_.SetPosition(entity, rollbackManager_.GetTransformManager().GetPosition(entity));
                 transformManager_.SetScale(entity, rollbackManager_.GetTransformManager().GetScale(entity));
-                transformManager_.SetRotation(entity, rollbackManager_.GetTransformManager().GetRotation(entity));
+            	transformManager_.SetRotation(entity, rollbackManager_.GetTransformManager().GetRotation(entity));
             }
+            if (entityManager_.HasComponent(entity,
+                static_cast<core::EntityMask>(ComponentType::PLAYER_CHARACTER) |
+                static_cast<core::EntityMask>(core::ComponentType::SPRITE)|
+				static_cast<core::EntityMask>(core::ComponentType::TRANSFORM)))
+            {
+                transformManager_.SetPosition(entity, rollbackManager_.GetTransformManager().GetPosition(entity));
+                if (GetRollbackManager().GetPlayerCharacterManager().GetComponent(entity).playerFaceRight)
+                {
+                    transformManager_.SetScale(entity, rollbackManager_.GetTransformManager().GetScale(entity));
+                }
+                else
+                {
+                    core::Vec2f scale = rollbackManager_.GetTransformManager().GetScale(entity);
+                    scale = core::Vec2f{ scale.x * -1,scale.y };//inverse the x
+                    transformManager_.SetScale(entity, scale);
+                }
+            }
+
+
         }
     }
     fixedTimer_ += dt.asSeconds();
@@ -401,14 +424,6 @@ void ClientGameManager::StartGame(unsigned long long int startingTime)
     core::LogDebug(fmt::format("Start game at starting time: {}", startingTime));
     startingTime_ = startingTime;
 
-
-    const auto entityPlayer1 = GetEntityFromPlayerNumber(0);
-	animationManager_.AddComponent(entityPlayer1);
-    animationManager_.SetComponent(entityPlayer1, AnimationData{});
-
-    const auto entityPlayer2 = GetEntityFromPlayerNumber(1);
-    animationManager_.AddComponent(entityPlayer2);
-    animationManager_.SetComponent(entityPlayer2, AnimationData{});
 
 }
 
