@@ -114,7 +114,7 @@ void PlayerCharacterManager::InitAttack(PlayerCharacter& playerCharacter,const B
 {
     playerCharacter.playerState = PlayerState::ATTACK;
     const auto attackPosition = playerBody.position
-        + core::Vec2f{ playerCharacter.playerFaceRight ? 0.5f : -0.5f,0.0f };
+        + core::Vec2f{ playerCharacter.playerFaceRight ? 0.3f : -0.3f,0.0f };
     playerManager.gameManager_.SpawnAttack(playerCharacter.playerNumber,
         attackPosition);
     playerCharacter.actualStateTime = 0.0f;
